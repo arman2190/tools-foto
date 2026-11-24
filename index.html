@@ -1,0 +1,3348 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VektorStudio Pro — Resize & Rasio, Upscaler HD, Vektor EPS 4K</title>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- ImageTracerJS CDN untuk Vektorisasi Akurat -->
+  <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.min.js" defer></script>
+
+  <style>
+    /* Gaya Dasar Editorial & Scrollbar Presisi */
+    body {
+      background-color: #09090b;
+      color: #f4f4f5;
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Pola Papan Catur Transparan untuk Kanvas */
+    .bg-checkerboard {
+      background-color: #121215;
+      background-image:
+        linear-gradient(45deg, #1f1f24 25%, transparent 25%),
+        linear-gradient(-45deg, #1f1f24 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1f1f24 75%),
+        linear-gradient(-45deg, transparent 75%, #1f1f24 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    }
+
+    /* Styling Input Range Minimalis & Tajam */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: #27272a;
+      border-radius: 2px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      background: #f4f4f5;
+      border: 1px solid #09090b;
+      cursor: pointer;
+      transition: transform 0.1s ease, background-color 0.15s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      background: #ffffff;
+      transform: scale(1.1);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      background: #f4f4f5;
+      border: 1px solid #09090b;
+      cursor: pointer;
+    }
+
+    /* Hilangkan spinner default pada input number */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    /* Mode Wireframe untuk SVG Vektor */
+    .wireframe-mode svg path {
+      fill: none !important;
+      stroke: #e4e4e7 !important;
+      stroke-width: 1.5px !important;
+      vector-effect: non-scaling-stroke;
+    }
+    .wireframe-light svg path {
+      fill: none !important;
+      stroke: #18181b !important;
+      stroke-width: 1.5px !important;
+      vector-effect: non-scaling-stroke;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #09090b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
+    }
+
+    .no-select {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#09090b] text-zinc-100 selection:bg-zinc-700 selection:text-white overflow-x-hidden">
+
+  <!-- HEADER NAVIGASI STUDIO -->
+  <header class="sticky top-0 z-30 border-b border-[#27272a] bg-[#09090b]/95 backdrop-blur-sm px-4 lg:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+    <!-- Brand -->
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded border border-zinc-700 bg-[#18181b] flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4 text-zinc-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 20L10 14M20 4L14 10M4 4h6v6H4V4zm10 10h6v6h-6v-6z" stroke-linecap="square"/>
+        </svg>
+      </div>
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2">
+          <h1 class="text-sm font-semibold tracking-tight text-zinc-100">VektorStudio Pro</h1>
+          <span class="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded border border-[#27272a] bg-[#18181b] text-zinc-300">RESIZE · HD · EPS 4K</span>
+        </div>
+        <p class="text-[11px] text-zinc-400 hidden xl:block">100% Lokal di Browser — Resize & Rasio, Upscaler HD, dan Vektor PostScript EPS</p>
+      </div>
+    </div>
+
+    <!-- Navigasi 3 Tab Utama -->
+    <nav class="flex items-center rounded-lg border border-[#27272a] bg-[#121215] p-1 overflow-x-auto max-w-full" role="tablist" aria-label="Mode Studio">
+      <button id="tabResize" type="button" role="tab" aria-selected="true"
+              class="main-tab flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-zinc-100 text-zinc-950 whitespace-nowrap transition-colors">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          <path d="M9 3v18M3 9h18"></path>
+        </svg>
+        <span>Resize & Rasio</span>
+      </button>
+      <button id="tabUpscaler" type="button" role="tab" aria-selected="false"
+              class="main-tab flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-400 hover:text-zinc-100 whitespace-nowrap transition-colors">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+        </svg>
+        <span>Upscaler HD</span>
+      </button>
+      <button id="tabVector" type="button" role="tab" aria-selected="false"
+              class="main-tab flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-400 hover:text-zinc-100 whitespace-nowrap transition-colors">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <span>Vektor EPS 4K</span>
+      </button>
+    </nav>
+
+    <!-- Aksi Cepat Header Kanan -->
+    <div class="flex items-center gap-2">
+      <button id="btnHeaderSample" type="button" class="text-xs font-medium px-3 py-1.5 rounded border border-[#27272a] bg-[#18181b] hover:bg-zinc-800 hover:border-zinc-600 text-zinc-300 transition-colors">
+        Coba Gambar Contoh
+      </button>
+      <button id="btnHeaderInspectEps" type="button" disabled class="hidden items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded border border-[#27272a] bg-[#18181b] hover:bg-zinc-800 text-zinc-300 disabled:opacity-40 disabled:pointer-events-none transition-colors">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        Lihat Kode EPS
+      </button>
+      <button id="btnHeaderUpload" type="button" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 transition-colors">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        Upload Gambar
+      </button>
+    </div>
+  </header>
+
+  <!-- WORKSPACE UTAMA -->
+  <main class="flex-1 flex flex-col lg:flex-row min-h-[calc(100vh-3.75rem)]">
+
+    <!-- =======================================================================
+         SIDEBAR KIRI: UPLOAD & PANEL KONTROL DINAMIS (RESIZE / UPSCALER / VEKTOR)
+    ======================================================================== -->
+    <aside class="w-full lg:w-[375px] xl:w-[400px] border-b lg:border-b-0 lg:border-r border-[#27272a] bg-[#121215] flex flex-col shrink-0">
+      <div class="p-4 sm:p-5 space-y-5 flex-1 overflow-y-auto">
+
+        <!-- BAGIAN 01: SUMBER GAMBAR (BERSAMA) -->
+        <section>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">01. Sumber Gambar</h2>
+            <span class="font-mono text-[10px] text-zinc-500">JPG · JPEG · PNG · WEBP</span>
+          </div>
+
+          <input id="fileInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="hidden" />
+
+          <!-- Dropzone -->
+          <div id="dropzone" tabindex="0" role="button" aria-label="Unggah gambar untuk diproses"
+               class="group relative border border-dashed border-zinc-700 hover:border-zinc-400 bg-[#18181b] hover:bg-[#1f1f23] rounded-lg p-3.5 text-center cursor-pointer transition-colors">
+            <div class="flex items-center justify-center gap-3">
+              <div class="w-9 h-9 rounded-md border border-[#27272a] bg-[#09090b] flex items-center justify-center text-zinc-400 group-hover:text-zinc-100 shrink-0 transition-colors">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <div class="text-left">
+                <p class="text-xs font-medium text-zinc-200">Tarik & letakkan gambar di sini</p>
+                <p class="text-[11px] text-zinc-500 mt-0.5">atau <span class="text-zinc-300 underline underline-offset-2">pilih file dari perangkat</span></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kartu Info File & Dimensi Real-Time -->
+          <div id="fileInfoCard" class="hidden mt-3 rounded-lg border border-[#27272a] bg-[#18181b] p-3 space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <p id="metaFileName" class="text-xs font-medium text-zinc-100 truncate">gambar.png</p>
+                <div class="flex items-center gap-2 mt-0.5 font-mono text-[11px] text-zinc-400">
+                  <span id="metaFileFormat" class="uppercase px-1.5 py-0.5 bg-zinc-800 rounded text-[10px] text-zinc-300">PNG</span>
+                  <span id="metaFileSize">0 KB</span>
+                  <span id="metaEstOutputSize" class="hidden text-zinc-200">→ 0 KB</span>
+                </div>
+              </div>
+              <span id="metaModeBadge" class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200 shrink-0">
+                ASLI
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[#27272a]">
+              <div class="bg-[#09090b] border border-[#27272a] rounded p-2">
+                <span class="block text-[10px] text-zinc-500 uppercase tracking-wide">Dimensi Asli</span>
+                <span id="metaOrigDim" class="font-mono text-xs text-zinc-300 mt-0.5 block">0 × 0 px</span>
+              </div>
+              <div class="bg-[#09090b] border border-zinc-700 rounded p-2">
+                <span id="metaTargetLabel" class="block text-[10px] text-zinc-400 uppercase tracking-wide">Dimensi Target</span>
+                <span id="metaTargetDim" class="font-mono text-xs font-semibold text-white mt-0.5 block">0 × 0 px</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             PANEL KONTROL MODE 1 (DEFAULT): RESIZE & ASPEK RASIO
+        ==================================================================== -->
+        <section id="resizeControls" class="space-y-4">
+          <div class="flex items-center justify-between border-t border-[#27272a] pt-4">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">02. Pengaturan Resize</h2>
+            <button id="btnResetResize" type="button" class="text-[11px] text-zinc-500 hover:text-zinc-200 transition-colors">Reset</button>
+          </div>
+
+          <!-- Input Lebar & Tinggi Kustom + Toggle Kunci Rasio -->
+          <div class="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+            <div>
+              <label for="inputResizeW" class="block text-[11px] font-medium text-zinc-400 mb-1">Lebar (px)</label>
+              <input id="inputResizeW" type="number" min="16" max="8192" placeholder="1920"
+                     class="w-full px-2.5 py-2 rounded border border-[#27272a] focus:border-zinc-400 bg-[#09090b] font-mono text-xs text-zinc-100 focus:outline-none transition-colors" />
+            </div>
+
+            <button id="btnLockRatio" type="button" title="Kunci / Buka Proporsi Rasio" aria-pressed="true"
+                    class="h-[34px] px-2.5 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 flex items-center justify-center transition-colors">
+              <svg id="iconLockClosed" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <svg id="iconLockOpen" class="hidden w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+              </svg>
+            </button>
+
+            <div>
+              <label for="inputResizeH" class="block text-[11px] font-medium text-zinc-400 mb-1">Tinggi (px)</label>
+              <input id="inputResizeH" type="number" min="16" max="8192" placeholder="1080"
+                     class="w-full px-2.5 py-2 rounded border border-[#27272a] focus:border-zinc-400 bg-[#09090b] font-mono text-xs text-zinc-100 focus:outline-none transition-colors" />
+            </div>
+          </div>
+
+          <!-- Slider Skala Persentase (10% - 100%) -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="sliderResizeScale" class="text-xs font-medium text-zinc-300">Skala Ukuran (Perkecil Cepat)</label>
+              <span id="valResizeScale" class="font-mono text-xs text-zinc-200 bg-[#09090b] border border-[#27272a] px-1.5 py-0.5 rounded">100%</span>
+            </div>
+            <input id="sliderResizeScale" type="range" min="10" max="100" step="1" value="100" />
+            <div class="flex justify-between font-mono text-[10px] text-zinc-500">
+              <span>10% (Kecil)</span>
+              <span>50%</span>
+              <span>100% (Asli)</span>
+            </div>
+          </div>
+
+          <!-- Tombol Preset Cepat -->
+          <div>
+            <span class="block text-[11px] font-medium text-zinc-400 mb-1.5">Preset Cepat</span>
+            <div class="grid grid-cols-5 gap-1.5">
+              <button type="button" data-rs-preset="pct:25" class="rs-preset-btn py-1.5 rounded border border-[#27272a] bg-[#18181b] hover:border-zinc-500 font-mono text-[11px] text-zinc-300 transition-colors">25%</button>
+              <button type="button" data-rs-preset="pct:50" class="rs-preset-btn py-1.5 rounded border border-[#27272a] bg-[#18181b] hover:border-zinc-500 font-mono text-[11px] text-zinc-300 transition-colors">50%</button>
+              <button type="button" data-rs-preset="pct:75" class="rs-preset-btn py-1.5 rounded border border-[#27272a] bg-[#18181b] hover:border-zinc-500 font-mono text-[11px] text-zinc-300 transition-colors">75%</button>
+              <button type="button" data-rs-preset="px:1080" class="rs-preset-btn py-1.5 rounded border border-[#27272a] bg-[#18181b] hover:border-zinc-500 font-mono text-[11px] text-zinc-300 transition-colors">1080px</button>
+              <button type="button" data-rs-preset="px:720" class="rs-preset-btn py-1.5 rounded border border-[#27272a] bg-[#18181b] hover:border-zinc-500 font-mono text-[11px] text-zinc-300 transition-colors">720px</button>
+            </div>
+          </div>
+
+          <!-- BAGIAN 03: PILIHAN ASPEK RASIO (TEPAT DI BAWAH PENGATURAN RESIZE) -->
+          <div class="border-t border-[#27272a] pt-4 space-y-3.5">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">03. Pilihan Aspek Rasio</h2>
+              <span id="valActiveRatio" class="font-mono text-[10px] text-zinc-300 bg-[#09090b] border border-[#27272a] px-1.5 py-0.5 rounded">Asli</span>
+            </div>
+
+            <!-- Grid 6 Pilihan Aspek Rasio -->
+            <div class="grid grid-cols-3 gap-1.5">
+              <button type="button" data-ratio="original"
+                      class="ratio-btn py-2 px-2 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 text-left transition-colors">
+                <span class="block font-mono text-xs font-semibold">Asli</span>
+                <span class="block text-[10px] opacity-75">Proporsi Asli</span>
+              </button>
+              <button type="button" data-ratio="9:16"
+                      class="ratio-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-500 text-left transition-colors">
+                <span class="block font-mono text-xs font-semibold">9:16</span>
+                <span class="block text-[10px] opacity-70">Story / Reels</span>
+              </button>
+              <button type="button" data-ratio="16:9"
+                      class="ratio-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-500 text-left transition-colors">
+                <span class="block font-mono text-xs font-semibold">16:9</span>
+                <span class="block text-[10px] opacity-70">Widescreen</span>
+              </button>
+              <button type="button" data-ratio="1:1"
+                      class="ratio-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-500 text-left transition-colors">
+                <span class="block font-mono text-xs font-semibold">1:1</span>
+                <span class="block text-[10px] opacity-70">Square</span>
+              </button>
+              <button type="button" data-ratio="4:3"
+                      class="ratio-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-500 text-left transition-colors">
+                <span class="block font-mono text-xs font-semibold">4:3</span>
+                <span class="block text-[10px] opacity-70">Klasik</span>
+              </button>
+              <button type="button" data-ratio="3:4"
+                      class="ratio-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-500 text-left transition-colors">
+                <span class="block font-mono text-xs font-semibold">3:4</span>
+                <span class="block text-[10px] opacity-70">Potret</span>
+              </button>
+            </div>
+
+            <!-- Mode Penyesuaian Rasio -->
+            <div>
+              <span class="block text-[11px] font-medium text-zinc-400 mb-1.5">Mode Penyesuaian</span>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" data-fit="cover"
+                        class="fit-mode-btn py-1.5 px-2 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 text-[11px] font-semibold transition-colors">
+                  Potong (Crop)
+                </button>
+                <button type="button" data-fit="contain"
+                        class="fit-mode-btn py-1.5 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-500 text-[11px] font-medium transition-colors">
+                  Penuh (Fit)
+                </button>
+                <button type="button" data-fit="stretch"
+                        class="fit-mode-btn py-1.5 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-500 text-[11px] font-medium transition-colors">
+                  Regangkan
+                </button>
+              </div>
+            </div>
+
+            <!-- Kontrol Fokus Titik Potong (Khusus Mode Cover/Crop) -->
+            <div id="cropFocusBox" class="p-3 rounded-lg border border-[#27272a] bg-[#18181b] space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-medium text-zinc-300">Posisi Titik Fokus Crop</span>
+                <button id="btnCenterFocus" type="button" class="text-[10px] font-mono text-zinc-400 hover:text-zinc-100 transition-colors">Tengah (50%)</button>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-[10px] font-mono text-zinc-400">
+                  <span>Horizontal (X)</span>
+                  <span id="valFocusX" class="text-zinc-200">50%</span>
+                </div>
+                <input id="sliderFocusX" type="range" min="0" max="100" step="1" value="50" />
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between text-[10px] font-mono text-zinc-400">
+                  <span>Vertikal (Y)</span>
+                  <span id="valFocusY" class="text-zinc-200">50%</span>
+                </div>
+                <input id="sliderFocusY" type="range" min="0" max="100" step="1" value="50" />
+              </div>
+            </div>
+
+            <!-- Kontrol Latar Belakang (Khusus Mode Contain/Fit) -->
+            <div id="containBgBox" class="hidden p-3 rounded-lg border border-[#27272a] bg-[#18181b] space-y-2">
+              <span class="block text-[11px] font-medium text-zinc-300">Latar Belakang Tambahan</span>
+              <div class="grid grid-cols-4 gap-1.5">
+                <button type="button" data-cbg="transparent" class="contain-bg-btn py-1.5 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 text-[10px] font-semibold transition-colors">Transparan</button>
+                <button type="button" data-cbg="black" class="contain-bg-btn py-1.5 rounded border border-[#27272a] bg-[#09090b] text-zinc-300 hover:border-zinc-500 text-[10px] font-medium transition-colors">Hitam</button>
+                <button type="button" data-cbg="white" class="contain-bg-btn py-1.5 rounded border border-[#27272a] bg-[#09090b] text-zinc-300 hover:border-zinc-500 text-[10px] font-medium transition-colors">Putih</button>
+                <button type="button" data-cbg="blur" class="contain-bg-btn py-1.5 rounded border border-[#27272a] bg-[#09090b] text-zinc-300 hover:border-zinc-500 text-[10px] font-medium transition-colors">Blur</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             PANEL KONTROL MODE 2: UPSCALER HD & PENAJAM GAMBAR BURAM
+        ==================================================================== -->
+        <section id="upscalerControls" class="hidden space-y-4">
+          <div class="flex items-center justify-between border-t border-[#27272a] pt-4">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">02. Skala & Restorasi HD</h2>
+            <button id="btnResetUpscale" type="button" class="text-[11px] text-zinc-500 hover:text-zinc-200 transition-colors">Reset</button>
+          </div>
+
+          <!-- Pilihan Skala Pengali -->
+          <div>
+            <label class="block text-xs font-medium text-zinc-300 mb-1.5">Skala Pengali</label>
+            <div class="grid grid-cols-3 gap-1.5">
+              <button type="button" data-scale-type="mult" data-scale-val="2"
+                      class="upscale-scale-btn py-2 px-2 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 font-mono text-xs font-semibold transition-colors">
+                2×
+              </button>
+              <button type="button" data-scale-type="mult" data-scale-val="3"
+                      class="upscale-scale-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 font-mono text-xs font-medium transition-colors">
+                3×
+              </button>
+              <button type="button" data-scale-type="mult" data-scale-val="4"
+                      class="upscale-scale-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 font-mono text-xs font-medium transition-colors">
+                4×
+              </button>
+            </div>
+          </div>
+
+          <!-- Pilihan Target Resolusi -->
+          <div>
+            <label class="block text-xs font-medium text-zinc-300 mb-1.5">Target Resolusi (Sisi Terpanjang)</label>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button type="button" data-scale-type="res" data-scale-val="1280"
+                      class="upscale-scale-btn py-2 px-2.5 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 text-left transition-colors">
+                <span class="block text-xs font-medium">HD</span>
+                <span class="block font-mono text-[10px] opacity-70">1280 px</span>
+              </button>
+              <button type="button" data-scale-type="res" data-scale-val="1920"
+                      class="upscale-scale-btn py-2 px-2.5 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 text-left transition-colors">
+                <span class="block text-xs font-medium">Full HD</span>
+                <span class="block font-mono text-[10px] opacity-70">1920 px</span>
+              </button>
+              <button type="button" data-scale-type="res" data-scale-val="2560"
+                      class="upscale-scale-btn py-2 px-2.5 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 text-left transition-colors">
+                <span class="block text-xs font-medium">2K QHD</span>
+                <span class="block font-mono text-[10px] opacity-70">2560 px</span>
+              </button>
+              <button type="button" data-scale-type="res" data-scale-val="3840"
+                      class="upscale-scale-btn py-2 px-2.5 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 text-left transition-colors">
+                <span class="block text-xs font-medium">4K UHD</span>
+                <span class="block font-mono text-[10px] opacity-70">3840 px</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Preset Restorasi Cepat -->
+          <div class="pt-1">
+            <label class="block text-xs font-medium text-zinc-300 mb-1.5">Preset Penajaman</label>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button type="button" data-up-preset="standar"
+                      class="up-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-zinc-200 bg-zinc-100 text-zinc-950 transition-colors text-left">
+                Standar HD
+              </button>
+              <button type="button" data-up-preset="ekstrem"
+                      class="up-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 transition-colors text-left">
+                Buram Ekstrem
+              </button>
+              <button type="button" data-up-preset="teks"
+                      class="up-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 transition-colors text-left">
+                Teks & Dokumen
+              </button>
+              <button type="button" data-up-preset="ilustrasi"
+                      class="up-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 transition-colors text-left">
+                Ilustrasi
+              </button>
+            </div>
+          </div>
+
+          <!-- Slider Ketajaman / Deblur -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="sliderUpSharpen" class="text-xs font-medium text-zinc-300">Ketajaman / Deblur</label>
+              <span id="valUpSharpen" class="font-mono text-xs text-zinc-200 bg-[#09090b] border border-[#27272a] px-1.5 py-0.5 rounded">65%</span>
+            </div>
+            <input id="sliderUpSharpen" type="range" min="0" max="100" step="5" value="65" />
+          </div>
+
+          <!-- Slider Pengurang Noise -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="sliderUpDenoise" class="text-xs font-medium text-zinc-300">Pengurang Noise (Denoise)</label>
+              <span id="valUpDenoise" class="font-mono text-xs text-zinc-200 bg-[#09090b] border border-[#27272a] px-1.5 py-0.5 rounded">20%</span>
+            </div>
+            <input id="sliderUpDenoise" type="range" min="0" max="100" step="5" value="20" />
+          </div>
+
+          <!-- Slider Kontras & Kejernihan -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="sliderUpContrast" class="text-xs font-medium text-zinc-300">Kontras & Kejernihan</label>
+              <span id="valUpContrast" class="font-mono text-xs text-zinc-200 bg-[#09090b] border border-[#27272a] px-1.5 py-0.5 rounded">+10</span>
+            </div>
+            <input id="sliderUpContrast" type="range" min="-20" max="50" step="2" value="10" />
+          </div>
+
+          <!-- Tombol Terapkan Proses HD -->
+          <button id="btnRunUpscale" type="button" disabled
+                  class="w-full py-2.5 px-4 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-100 flex items-center justify-center gap-2 disabled:opacity-40 disabled:pointer-events-none transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            Terapkan & Proses Upscale HD
+          </button>
+        </section>
+
+        <!-- ===================================================================
+             PANEL KONTROL MODE 3: KONVERSI VEKTOR EPS 4K
+        ==================================================================== -->
+        <section id="vectorControls" class="hidden space-y-4">
+          <div class="flex items-center justify-between border-t border-[#27272a] pt-4">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">02. Parameter Vektor EPS</h2>
+            <button id="btnResetVector" type="button" class="text-[11px] text-zinc-500 hover:text-zinc-200 transition-colors">Reset</button>
+          </div>
+
+          <!-- Skala Target Vektor -->
+          <div>
+            <label class="block text-xs font-medium text-zinc-300 mb-1.5">Skala Output Vektor (BoundingBox)</label>
+            <div class="grid grid-cols-3 gap-1.5">
+              <button type="button" data-vec-scale="1920"
+                      class="vec-scale-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 text-center transition-colors">
+                <span class="block text-[11px] font-medium">Full HD</span>
+                <span class="block font-mono text-[10px] opacity-70">1920px</span>
+              </button>
+              <button type="button" data-vec-scale="2560"
+                      class="vec-scale-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 text-center transition-colors">
+                <span class="block text-[11px] font-medium">2K QHD</span>
+                <span class="block font-mono text-[10px] opacity-70">2560px</span>
+              </button>
+              <button type="button" data-vec-scale="3840"
+                      class="vec-scale-btn py-2 px-2 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 text-center transition-colors">
+                <span class="block text-[11px] font-semibold">4K UHD</span>
+                <span class="block font-mono text-[10px] opacity-80">3840px</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Preset Vektorisasi -->
+          <div>
+            <label class="block text-xs font-medium text-zinc-300 mb-1.5">Preset Profil</label>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button type="button" data-vec-preset="logo"
+                      class="vec-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 transition-colors text-left">
+                Logo / Ikon
+              </button>
+              <button type="button" data-vec-preset="ilustrasi"
+                      class="vec-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-zinc-200 bg-zinc-100 text-zinc-950 transition-colors text-left">
+                Ilustrasi
+              </button>
+              <button type="button" data-vec-preset="foto"
+                      class="vec-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 transition-colors text-left">
+                Detail Foto
+              </button>
+              <button type="button" data-vec-preset="bw"
+                      class="vec-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 transition-colors text-left">
+                Hitam Putih
+              </button>
+            </div>
+          </div>
+
+          <!-- Jumlah Warna -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="sliderVecColors" class="text-xs font-medium text-zinc-300">Jumlah Warna</label>
+              <span id="valVecColors" class="font-mono text-xs text-zinc-200 bg-[#09090b] border border-[#27272a] px-1.5 py-0.5 rounded">16</span>
+            </div>
+            <input id="sliderVecColors" type="range" min="2" max="64" step="1" value="16" />
+          </div>
+
+          <!-- Detail Path -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="sliderVecDetail" class="text-xs font-medium text-zinc-300">Detail Path & Presisi</label>
+              <span id="valVecDetail" class="font-mono text-xs text-zinc-200 bg-[#09090b] border border-[#27272a] px-1.5 py-0.5 rounded">75%</span>
+            </div>
+            <input id="sliderVecDetail" type="range" min="10" max="100" step="5" value="75" />
+          </div>
+
+          <!-- Kehalusan Kurva -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="sliderVecSmooth" class="text-xs font-medium text-zinc-300">Kehalusan Kurva</label>
+              <span id="valVecSmooth" class="font-mono text-xs text-zinc-200 bg-[#09090b] border border-[#27272a] px-1.5 py-0.5 rounded">50%</span>
+            </div>
+            <input id="sliderVecSmooth" type="range" min="0" max="100" step="5" value="50" />
+          </div>
+
+          <!-- Toggle Pra-Penajaman -->
+          <div class="flex items-center justify-between p-3 rounded-lg border border-[#27272a] bg-[#18181b]">
+            <div>
+              <p class="text-xs font-medium text-zinc-200">Pra-Penajaman (Unsharp Mask)</p>
+              <p class="text-[11px] text-zinc-500 mt-0.5">Pertajam garis tepi sebelum tracing</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input id="toggleVecSharpen" type="checkbox" checked class="sr-only peer" />
+              <div class="w-9 h-5 bg-zinc-800 border border-zinc-700 rounded-full peer peer-checked:bg-zinc-100 transition-colors after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-zinc-400 peer-checked:after:bg-zinc-950 after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:after:translate-x-4"></div>
+            </label>
+          </div>
+
+          <!-- Tombol Proses Ulang Vektor -->
+          <button id="btnRunVector" type="button" disabled
+                  class="w-full py-2.5 px-4 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-100 flex items-center justify-center gap-2 disabled:opacity-40 disabled:pointer-events-none transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            Terapkan & Proses Vektor EPS
+          </button>
+        </section>
+      </div>
+
+      <!-- FOOTER SIDEBAR: AKSI EKSPOR SESUAI MODE -->
+      <div class="p-4 border-t border-[#27272a] bg-[#09090b]">
+
+        <!-- Aksi Ekspor Mode 1: Resize & Aspek Rasio -->
+        <div id="resizeExportBox" class="space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] font-medium text-zinc-400">Format Ekspor:</span>
+            <div class="inline-flex rounded-md border border-[#27272a] bg-[#121215] p-0.5">
+              <button type="button" data-rs-fmt="jpeg" class="rs-fmt-btn px-2.5 py-1 rounded text-[11px] font-mono font-medium bg-zinc-800 text-zinc-100 transition-colors">JPG</button>
+              <button type="button" data-rs-fmt="png" class="rs-fmt-btn px-2.5 py-1 rounded text-[11px] font-mono font-medium text-zinc-400 hover:text-zinc-200 transition-colors">PNG</button>
+              <button type="button" data-rs-fmt="webp" class="rs-fmt-btn px-2.5 py-1 rounded text-[11px] font-mono font-medium text-zinc-400 hover:text-zinc-200 transition-colors">WebP</button>
+            </div>
+          </div>
+
+          <div id="resizeQualityWrap" class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label for="sliderResizeQuality" class="text-[11px] font-medium text-zinc-400">Kualitas Kompresi</label>
+              <span id="valResizeQuality" class="font-mono text-[11px] text-zinc-200">85%</span>
+            </div>
+            <input id="sliderResizeQuality" type="range" min="10" max="100" step="1" value="85" />
+          </div>
+
+          <button id="btnDownloadResize" type="button" disabled
+                  class="w-full py-2.5 px-4 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-35 disabled:pointer-events-none transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Unduh Hasil Resize
+          </button>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btnResizeToUpscaler" type="button" disabled
+                    class="py-2 px-2.5 rounded-lg border border-[#27272a] bg-[#18181b] hover:bg-zinc-800 text-zinc-200 text-[11px] font-medium flex items-center justify-center gap-1 disabled:opacity-35 disabled:pointer-events-none transition-colors">
+              <span>Kirim ke Upscaler HD</span>
+            </button>
+            <button id="btnResizeToVector" type="button" disabled
+                    class="py-2 px-2.5 rounded-lg border border-[#27272a] bg-[#18181b] hover:bg-zinc-800 text-zinc-200 text-[11px] font-medium flex items-center justify-center gap-1 disabled:opacity-35 disabled:pointer-events-none transition-colors">
+              <span>Kirim ke Vektor EPS</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Aksi Ekspor Mode 2: Upscaler HD -->
+        <div id="upscalerExportBox" class="hidden space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] font-medium text-zinc-400">Format Unduhan:</span>
+            <div class="inline-flex rounded-md border border-[#27272a] bg-[#121215] p-0.5">
+              <button type="button" data-fmt="png" class="fmt-btn px-2 py-1 rounded text-[11px] font-mono font-medium bg-zinc-800 text-zinc-100 transition-colors">PNG</button>
+              <button type="button" data-fmt="jpeg" class="fmt-btn px-2 py-1 rounded text-[11px] font-mono font-medium text-zinc-400 hover:text-zinc-200 transition-colors">JPG</button>
+              <button type="button" data-fmt="webp" class="fmt-btn px-2 py-1 rounded text-[11px] font-mono font-medium text-zinc-400 hover:text-zinc-200 transition-colors">WebP</button>
+            </div>
+          </div>
+
+          <button id="btnDownloadHd" type="button" disabled
+                  class="w-full py-2.5 px-4 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-35 disabled:pointer-events-none transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Unduh Gambar HD
+          </button>
+
+          <button id="btnSendToVector" type="button" disabled
+                  class="w-full py-2.5 px-4 rounded-lg border border-zinc-700 bg-[#18181b] hover:bg-zinc-800 text-zinc-100 font-medium text-xs flex items-center justify-center gap-2 disabled:opacity-35 disabled:pointer-events-none transition-colors">
+            <span>Lanjut ke Vektor EPS</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+
+        <!-- Aksi Ekspor Mode 3: Vektor EPS -->
+        <div id="vectorExportBox" class="hidden space-y-2">
+          <button id="btnDownloadEps" type="button" disabled
+                  class="w-full py-2.5 px-4 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-35 disabled:pointer-events-none transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Unduh Vektor (.EPS)
+          </button>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btnDownloadSvg" type="button" disabled
+                    class="py-2 px-3 rounded-lg border border-[#27272a] bg-[#18181b] hover:bg-zinc-800 text-zinc-300 text-xs font-medium flex items-center justify-center gap-1.5 disabled:opacity-35 disabled:pointer-events-none transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              Unduh .SVG
+            </button>
+            <button id="btnInspectEpsSide" type="button" disabled
+                    class="py-2 px-3 rounded-lg border border-[#27272a] bg-[#18181b] hover:bg-zinc-800 text-zinc-300 text-xs font-medium flex items-center justify-center gap-1.5 disabled:opacity-35 disabled:pointer-events-none transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+              Lihat Kode EPS
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- =======================================================================
+         AREA KANAN: KANVAS PREVIEW INTERAKTIF
+    ======================================================================== -->
+    <section class="flex-1 flex flex-col bg-[#09090b] min-w-0">
+
+      <!-- TOOLBAR PREVIEW ATAS -->
+      <div class="border-b border-[#27272a] bg-[#121215] px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+        <!-- Mode Tampilan -->
+        <div class="inline-flex items-center rounded-md border border-[#27272a] bg-[#09090b] p-0.5" role="tablist">
+          <button id="tabViewResult" type="button" data-view="result" class="view-tab px-2.5 py-1.5 text-xs font-medium rounded bg-zinc-800 text-zinc-100 transition-colors">
+            Hasil Resize
+          </button>
+          <button type="button" data-view="split" class="view-tab px-2.5 py-1.5 text-xs font-medium rounded text-zinc-400 hover:text-zinc-200 transition-colors">
+            Split Perbandingan
+          </button>
+          <button type="button" data-view="original" class="view-tab px-2.5 py-1.5 text-xs font-medium rounded text-zinc-400 hover:text-zinc-200 transition-colors">
+            Gambar Asli
+          </button>
+          <button id="tabViewWireframe" type="button" data-view="wireframe" class="view-tab hidden px-2.5 py-1.5 text-xs font-medium rounded text-zinc-400 hover:text-zinc-200 transition-colors">
+            Wireframe
+          </button>
+        </div>
+
+        <!-- Latar & Zoom Controls -->
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="inline-flex items-center rounded-md border border-[#27272a] bg-[#09090b] p-0.5" title="Latar Belakang Kanvas">
+            <button type="button" data-bg="checker" class="bg-btn px-2 py-1 text-[11px] font-medium rounded bg-zinc-800 text-zinc-100 transition-colors">Transparan</button>
+            <button type="button" data-bg="dark" class="bg-btn px-2 py-1 text-[11px] font-medium rounded text-zinc-400 hover:text-zinc-200 transition-colors">Gelap</button>
+            <button type="button" data-bg="light" class="bg-btn px-2 py-1 text-[11px] font-medium rounded text-zinc-400 hover:text-zinc-200 transition-colors">Terang</button>
+          </div>
+
+          <div class="inline-flex items-center rounded-md border border-[#27272a] bg-[#09090b] p-0.5">
+            <button id="btnZoomOut" type="button" aria-label="Perkecil" class="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <select id="zoomPresetSelect" aria-label="Pilih tingkat zoom"
+                    class="bg-transparent font-mono text-[11px] text-zinc-200 px-1.5 py-1 focus:outline-none cursor-pointer">
+              <option value="fit" class="bg-zinc-900">Fit</option>
+              <option value="0.5" class="bg-zinc-900">50%</option>
+              <option value="1" class="bg-zinc-900" selected>100%</option>
+              <option value="2" class="bg-zinc-900">200%</option>
+              <option value="4" class="bg-zinc-900">400%</option>
+            </select>
+            <button id="btnZoomIn" type="button" aria-label="Perbesar" class="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <button id="btnZoomFit" type="button" class="px-2 py-1 text-[11px] font-mono text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded border-l border-[#27272a] ml-0.5 transition-colors">
+              Fit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEWPORT KANVAS -->
+      <div id="canvasViewport" class="relative flex-1 min-h-[420px] lg:min-h-0 overflow-hidden bg-checkerboard flex items-center justify-center select-none">
+
+        <!-- Empty State -->
+        <div id="emptyState" class="max-w-md mx-auto text-center px-6 py-10">
+          <div class="w-14 h-14 mx-auto mb-4 rounded-xl border border-[#27272a] bg-[#18181b] flex items-center justify-center text-zinc-400">
+            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </div>
+          <h3 id="emptyTitle" class="text-base font-semibold text-zinc-100">Resize Foto & Atur Aspek Rasio Presisi</h3>
+          <p id="emptyDesc" class="text-xs text-zinc-400 mt-2 leading-relaxed">
+            Unggah gambar <span class="font-mono text-zinc-300">.JPG</span>, <span class="font-mono text-zinc-300">.JPEG</span>, <span class="font-mono text-zinc-300">.PNG</span>, atau <span class="font-mono text-zinc-300">.WebP</span>. Perkecil ukuran foto secara kustom, pilih aspek rasio <span class="font-mono text-zinc-300">9:16</span>, <span class="font-mono text-zinc-300">16:9</span>, <span class="font-mono text-zinc-300">1:1</span>, <span class="font-mono text-zinc-300">4:3</span>, atau <span class="font-mono text-zinc-300">3:4</span> dengan kontrol crop & kompresi real-time.
+          </p>
+          <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <button id="btnEmptyUpload" type="button" class="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold transition-colors">
+              Pilih Gambar Sekarang
+            </button>
+            <button id="btnEmptySample" type="button" class="px-4 py-2 rounded-lg border border-zinc-700 bg-[#18181b] hover:bg-zinc-800 text-zinc-200 text-xs font-medium transition-colors">
+              Coba Gambar Contoh
+            </button>
+          </div>
+        </div>
+
+        <!-- Stage Preview Interaktif (Zoom + Pan + Split Slider) -->
+        <div id="previewStage" class="hidden relative w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing">
+          <div id="transformLayer" class="relative origin-center transition-transform duration-75 ease-out will-change-transform shadow-2xl border border-zinc-700/70">
+            <!-- Lapisan 1: Gambar Asli -->
+            <div id="originalLayer" class="relative w-full h-full bg-[#09090b]/40">
+              <img id="originalPreviewImg" alt="Gambar Asli" class="block w-full h-full object-contain pointer-events-none select-none" />
+            </div>
+
+            <!-- Lapisan 2: Hasil Proses (Resize / HD Raster / Vektor SVG) -->
+            <div id="resultLayer" class="absolute inset-0 w-full h-full overflow-hidden">
+              <img id="resizeResultImg" alt="Hasil Resize" class="hidden w-full h-full object-contain pointer-events-none select-none" />
+              <img id="hdResultImg" alt="Hasil HD" class="hidden w-full h-full object-contain pointer-events-none select-none" />
+              <div id="svgContainer" class="hidden w-full h-full flex items-center justify-center"></div>
+            </div>
+
+            <!-- Garis & Pegangan Split Slider -->
+            <div id="splitHandle" class="hidden absolute top-0 bottom-0 z-20 w-0.5 bg-white cursor-ew-resize" style="left: 50%;">
+              <span id="splitLabelLeft" class="absolute top-3 right-3 px-2 py-0.5 rounded bg-zinc-950/90 border border-zinc-700 font-mono text-[10px] text-zinc-200 whitespace-nowrap pointer-events-none">ASLI</span>
+              <span id="splitLabelRight" class="absolute top-3 left-3 px-2 py-0.5 rounded bg-zinc-100/95 border border-zinc-300 font-mono text-[10px] font-semibold text-zinc-950 whitespace-nowrap pointer-events-none">HASIL</span>
+
+              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-zinc-950 border border-zinc-200 flex items-center justify-center shadow-lg">
+                <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <svg class="w-4 h-4 text-white -ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OVERLAY PROGRES PEMROSESAN -->
+        <div id="processingOverlay" class="hidden absolute inset-0 z-30 bg-[#09090b]/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div class="w-full max-w-sm rounded-lg border border-[#27272a] bg-[#121215] p-5 shadow-2xl">
+            <div class="flex items-center justify-between mb-3">
+              <span id="progressTitle" class="text-xs font-semibold text-zinc-100 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-zinc-100 animate-pulse"></span>
+                Memproses Gambar
+              </span>
+              <span id="progressPercent" class="font-mono text-xs text-zinc-300">0%</span>
+            </div>
+
+            <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden mb-4">
+              <div id="progressBar" class="h-full bg-zinc-100 transition-all duration-200 ease-out" style="width: 0%;"></div>
+            </div>
+
+            <div class="space-y-2 font-mono text-[11px]">
+              <div id="step1" class="flex items-center justify-between text-zinc-400">
+                <span class="step-label">1. Persiapan Kanvas</span>
+                <span class="step-status text-zinc-600">Menunggu</span>
+              </div>
+              <div id="step2" class="flex items-center justify-between text-zinc-400">
+                <span class="step-label">2. Pemrosesan Piksel</span>
+                <span class="step-status text-zinc-600">Menunggu</span>
+              </div>
+              <div id="step3" class="flex items-center justify-between text-zinc-400">
+                <span class="step-label">3. Finalisasi Output</span>
+                <span class="step-status text-zinc-600">Menunggu</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS BAR METRIK TEKNIS BAWAH -->
+      <footer class="border-t border-[#27272a] bg-[#121215] px-4 py-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-1.5 font-mono text-[11px] text-zinc-400">
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <div class="flex items-center gap-1.5">
+            <span id="statLabel1" class="text-zinc-500">OUTPUT:</span>
+            <span id="statVal1" class="text-zinc-200">—</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span id="statLabel2" class="text-zinc-500">RASIO:</span>
+            <span id="statVal2" class="text-zinc-200">—</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span id="statLabel3" class="text-zinc-500">ESTIMASI FILE:</span>
+            <span id="statVal3" class="text-zinc-200">—</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 text-zinc-500">
+          <span id="statEngine">Mesin: Client-Side HTML5 Canvas (Tanpa Server)</span>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <!-- MODAL INSPEKSI KODE EPS -->
+  <div id="epsModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-3xl max-h-[85vh] rounded-lg border border-zinc-700 bg-[#121215] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-[#27272a] flex items-center justify-between bg-[#18181b]">
+        <div>
+          <h3 class="text-sm font-semibold text-zinc-100">Inspeksi Kode PostScript (.EPS)</h3>
+          <p id="epsModalMeta" class="font-mono text-[11px] text-zinc-400 mt-0.5">%!PS-Adobe-3.0 EPSF-3.0</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnCopyEps" type="button" class="px-3 py-1.5 rounded border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-100 transition-colors">
+            Salin Potongan
+          </button>
+          <button id="btnCloseModal" type="button" aria-label="Tutup modal" class="p-1.5 rounded border border-[#27272a] bg-[#09090b] hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-auto p-4 bg-[#09090b]">
+        <pre id="epsCodePreview" class="font-mono text-[11px] leading-relaxed text-zinc-300 whitespace-pre-wrap break-all"></pre>
+      </div>
+
+      <div class="px-4 py-2.5 border-t border-[#27272a] bg-[#18181b] flex items-center justify-between text-[11px] text-zinc-400">
+        <span>Kompatibel dengan Adobe Illustrator, CorelDRAW, Inkscape, dan Ghostscript.</span>
+        <span class="font-mono text-zinc-300">EPSF-3.0 · Y-Axis Inverted</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFIKASI TOAST -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- =========================================================================
+       SCRIPT UTAMA: VEKTORSTUDIO PRO (RESIZE & RASIO + UPSCALER HD + VEKTOR EPS)
+  ========================================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      // =======================================================================
+      // 1. STATE APLIKASI TERPUSAT
+      // =======================================================================
+      const state = {
+        activeMode: 'resize', // 'resize' | 'upscaler' | 'vector'
+        isProcessing: false,
+
+        // State Preview Bersama
+        viewMode: 'result',   // 'result' | 'split' | 'original' | 'wireframe'
+        canvasBg: 'checker',  // 'checker' | 'dark' | 'light'
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+        splitPos: 50,
+
+        // State Mode 1 (DEFAULT): Resize & Aspek Rasio
+        rs: {
+          sourceImage: null,
+          origDataUrl: '',
+          fileName: '',
+          fileFormat: '',
+          fileSize: 0,
+          origW: 0,
+          origH: 0,
+          targetW: 0,
+          targetH: 0,
+          lockRatio: true,
+          scalePct: 100,
+          aspectRatio: 'original', // 'original' | '9:16' | '16:9' | '1:1' | '4:3' | '3:4'
+          fitMode: 'cover',        // 'cover' | 'contain' | 'stretch'
+          focusX: 50,
+          focusY: 50,
+          containBg: 'transparent', // 'transparent' | 'black' | 'white' | 'blur'
+          exportFormat: 'jpeg',     // 'jpeg' | 'png' | 'webp'
+          quality: 85,              // 10 - 100
+          resultCanvas: null,
+          resultDataUrl: '',
+          resultBlobSize: 0
+        },
+
+        // State Mode 2: Upscaler HD
+        up: {
+          sourceImage: null,
+          origDataUrl: '',
+          fileName: '',
+          fileFormat: '',
+          fileSize: 0,
+          origW: 0,
+          origH: 0,
+          scaleType: 'mult',
+          scaleVal: 2,
+          targetW: 0,
+          targetH: 0,
+          preset: 'standar',
+          sharpen: 65,
+          denoise: 20,
+          contrast: 10,
+          exportFormat: 'png',
+          resultCanvas: null,
+          resultDataUrl: '',
+          resultBlobSize: 0
+        },
+
+        // State Mode 3: Vektor EPS 4K
+        vec: {
+          sourceImage: null,
+          origDataUrl: '',
+          fileName: '',
+          fileFormat: '',
+          fileSize: 0,
+          origW: 0,
+          origH: 0,
+          targetLongest: 3840,
+          targetW: 3840,
+          targetH: 2160,
+          preset: 'ilustrasi',
+          colors: 16,
+          detail: 75,
+          smooth: 50,
+          sharpen: true,
+          svgString: '',
+          epsString: '',
+          pathCount: 0,
+          epsByteSize: 0
+        }
+      };
+
+      const UP_PRESETS = {
+        standar:   { sharpen: 65, denoise: 20, contrast: 10 },
+        ekstrem:   { sharpen: 95, denoise: 35, contrast: 20 },
+        teks:      { sharpen: 90, denoise: 10, contrast: 32 },
+        ilustrasi: { sharpen: 55, denoise: 30, contrast: 12 }
+      };
+
+      const VEC_PRESETS = {
+        logo:      { colors: 8,  detail: 85, smooth: 35, sharpen: true },
+        ilustrasi: { colors: 16, detail: 75, smooth: 50, sharpen: true },
+        foto:      { colors: 36, detail: 90, smooth: 45, sharpen: true },
+        bw:        { colors: 2,  detail: 85, smooth: 30, sharpen: true }
+      };
+
+      const RATIO_MAP = {
+        '9:16': 9 / 16,
+        '16:9': 16 / 9,
+        '1:1':  1,
+        '4:3':  4 / 3,
+        '3:4':  3 / 4
+      };
+
+      // =======================================================================
+      // 2. REFERENSI ELEMEN DOM
+      // =======================================================================
+      const el = {
+        // Header & Tabs
+        tabResize: document.getElementById('tabResize'),
+        tabUpscaler: document.getElementById('tabUpscaler'),
+        tabVector: document.getElementById('tabVector'),
+        btnHeaderSample: document.getElementById('btnHeaderSample'),
+        btnHeaderInspectEps: document.getElementById('btnHeaderInspectEps'),
+        btnHeaderUpload: document.getElementById('btnHeaderUpload'),
+
+        // Upload & Metadata
+        fileInput: document.getElementById('fileInput'),
+        dropzone: document.getElementById('dropzone'),
+        fileInfoCard: document.getElementById('fileInfoCard'),
+        metaFileName: document.getElementById('metaFileName'),
+        metaFileFormat: document.getElementById('metaFileFormat'),
+        metaFileSize: document.getElementById('metaFileSize'),
+        metaEstOutputSize: document.getElementById('metaEstOutputSize'),
+        metaModeBadge: document.getElementById('metaModeBadge'),
+        metaOrigDim: document.getElementById('metaOrigDim'),
+        metaTargetLabel: document.getElementById('metaTargetLabel'),
+        metaTargetDim: document.getElementById('metaTargetDim'),
+
+        // Panel Resize & Rasio
+        resizeControls: document.getElementById('resizeControls'),
+        resizeExportBox: document.getElementById('resizeExportBox'),
+        btnResetResize: document.getElementById('btnResetResize'),
+        inputResizeW: document.getElementById('inputResizeW'),
+        inputResizeH: document.getElementById('inputResizeH'),
+        btnLockRatio: document.getElementById('btnLockRatio'),
+        iconLockClosed: document.getElementById('iconLockClosed'),
+        iconLockOpen: document.getElementById('iconLockOpen'),
+        sliderResizeScale: document.getElementById('sliderResizeScale'),
+        valResizeScale: document.getElementById('valResizeScale'),
+        rsPresetBtns: document.querySelectorAll('.rs-preset-btn'),
+        valActiveRatio: document.getElementById('valActiveRatio'),
+        ratioBtns: document.querySelectorAll('.ratio-btn'),
+        fitModeBtns: document.querySelectorAll('.fit-mode-btn'),
+        cropFocusBox: document.getElementById('cropFocusBox'),
+        btnCenterFocus: document.getElementById('btnCenterFocus'),
+        sliderFocusX: document.getElementById('sliderFocusX'),
+        valFocusX: document.getElementById('valFocusX'),
+        sliderFocusY: document.getElementById('sliderFocusY'),
+        valFocusY: document.getElementById('valFocusY'),
+        containBgBox: document.getElementById('containBgBox'),
+        containBgBtns: document.querySelectorAll('.contain-bg-btn'),
+        rsFmtBtns: document.querySelectorAll('.rs-fmt-btn'),
+        resizeQualityWrap: document.getElementById('resizeQualityWrap'),
+        sliderResizeQuality: document.getElementById('sliderResizeQuality'),
+        valResizeQuality: document.getElementById('valResizeQuality'),
+        btnDownloadResize: document.getElementById('btnDownloadResize'),
+        btnResizeToUpscaler: document.getElementById('btnResizeToUpscaler'),
+        btnResizeToVector: document.getElementById('btnResizeToVector'),
+
+        // Panel Upscaler
+        upscalerControls: document.getElementById('upscalerControls'),
+        upscalerExportBox: document.getElementById('upscalerExportBox'),
+        upscaleScaleBtns: document.querySelectorAll('.upscale-scale-btn'),
+        upPresetBtns: document.querySelectorAll('.up-preset-btn'),
+        sliderUpSharpen: document.getElementById('sliderUpSharpen'),
+        valUpSharpen: document.getElementById('valUpSharpen'),
+        sliderUpDenoise: document.getElementById('sliderUpDenoise'),
+        valUpDenoise: document.getElementById('valUpDenoise'),
+        sliderUpContrast: document.getElementById('sliderUpContrast'),
+        valUpContrast: document.getElementById('valUpContrast'),
+        btnResetUpscale: document.getElementById('btnResetUpscale'),
+        btnRunUpscale: document.getElementById('btnRunUpscale'),
+        fmtBtns: document.querySelectorAll('.fmt-btn'),
+        btnDownloadHd: document.getElementById('btnDownloadHd'),
+        btnSendToVector: document.getElementById('btnSendToVector'),
+
+        // Panel Vektor
+        vectorControls: document.getElementById('vectorControls'),
+        vectorExportBox: document.getElementById('vectorExportBox'),
+        vecScaleBtns: document.querySelectorAll('.vec-scale-btn'),
+        vecPresetBtns: document.querySelectorAll('.vec-preset-btn'),
+        sliderVecColors: document.getElementById('sliderVecColors'),
+        valVecColors: document.getElementById('valVecColors'),
+        sliderVecDetail: document.getElementById('sliderVecDetail'),
+        valVecDetail: document.getElementById('valVecDetail'),
+        sliderVecSmooth: document.getElementById('sliderVecSmooth'),
+        valVecSmooth: document.getElementById('valVecSmooth'),
+        toggleVecSharpen: document.getElementById('toggleVecSharpen'),
+        btnResetVector: document.getElementById('btnResetVector'),
+        btnRunVector: document.getElementById('btnRunVector'),
+        btnDownloadEps: document.getElementById('btnDownloadEps'),
+        btnDownloadSvg: document.getElementById('btnDownloadSvg'),
+        btnInspectEpsSide: document.getElementById('btnInspectEpsSide'),
+
+        // Toolbar Preview
+        viewTabs: document.querySelectorAll('.view-tab'),
+        tabViewResult: document.getElementById('tabViewResult'),
+        tabViewWireframe: document.getElementById('tabViewWireframe'),
+        bgBtns: document.querySelectorAll('.bg-btn'),
+        btnZoomOut: document.getElementById('btnZoomOut'),
+        btnZoomIn: document.getElementById('btnZoomIn'),
+        btnZoomFit: document.getElementById('btnZoomFit'),
+        zoomPresetSelect: document.getElementById('zoomPresetSelect'),
+
+        // Viewport & Stage
+        canvasViewport: document.getElementById('canvasViewport'),
+        emptyState: document.getElementById('emptyState'),
+        emptyTitle: document.getElementById('emptyTitle'),
+        emptyDesc: document.getElementById('emptyDesc'),
+        btnEmptyUpload: document.getElementById('btnEmptyUpload'),
+        btnEmptySample: document.getElementById('btnEmptySample'),
+
+        previewStage: document.getElementById('previewStage'),
+        transformLayer: document.getElementById('transformLayer'),
+        originalLayer: document.getElementById('originalLayer'),
+        originalPreviewImg: document.getElementById('originalPreviewImg'),
+        resultLayer: document.getElementById('resultLayer'),
+        resizeResultImg: document.getElementById('resizeResultImg'),
+        hdResultImg: document.getElementById('hdResultImg'),
+        svgContainer: document.getElementById('svgContainer'),
+        splitHandle: document.getElementById('splitHandle'),
+        splitLabelLeft: document.getElementById('splitLabelLeft'),
+        splitLabelRight: document.getElementById('splitLabelRight'),
+
+        // Progress Overlay
+        processingOverlay: document.getElementById('processingOverlay'),
+        progressTitle: document.getElementById('progressTitle'),
+        progressBar: document.getElementById('progressBar'),
+        progressPercent: document.getElementById('progressPercent'),
+        step1: document.getElementById('step1'),
+        step2: document.getElementById('step2'),
+        step3: document.getElementById('step3'),
+
+        // Status Bar
+        statLabel1: document.getElementById('statLabel1'),
+        statVal1: document.getElementById('statVal1'),
+        statLabel2: document.getElementById('statLabel2'),
+        statVal2: document.getElementById('statVal2'),
+        statLabel3: document.getElementById('statLabel3'),
+        statVal3: document.getElementById('statVal3'),
+        statEngine: document.getElementById('statEngine'),
+
+        // Modal EPS
+        epsModal: document.getElementById('epsModal'),
+        epsModalMeta: document.getElementById('epsModalMeta'),
+        epsCodePreview: document.getElementById('epsCodePreview'),
+        btnCopyEps: document.getElementById('btnCopyEps'),
+        btnCloseModal: document.getElementById('btnCloseModal'),
+
+        toastContainer: document.getElementById('toastContainer')
+      };
+
+      // =======================================================================
+      // 3. UTILITAS UMUM & TOAST
+      // =======================================================================
+      function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        const tone = type === 'error'
+          ? 'border-red-500/60 bg-zinc-950 text-red-200'
+          : type === 'success'
+            ? 'border-zinc-500 bg-zinc-950 text-zinc-100'
+            : 'border-zinc-700 bg-zinc-950 text-zinc-200';
+
+        toast.className = `pointer-events-auto px-4 py-2.5 rounded-lg border ${tone} shadow-xl text-xs font-medium flex items-center gap-2 transition-all duration-200 translate-y-2 opacity-0`;
+        toast.textContent = message;
+        el.toastContainer.appendChild(toast);
+
+        requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'translate-y-1');
+          setTimeout(() => toast.remove(), 220);
+        }, 3000);
+      }
+
+      function formatBytes(bytes) {
+        if (!bytes || bytes <= 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      }
+
+      function yieldToUI(ms = 25) {
+        return new Promise((resolve) => {
+          requestAnimationFrame(() => setTimeout(resolve, ms));
+        });
+      }
+
+      function calcDimByLongest(origW, origH, longestSide) {
+        if (origW >= origH) {
+          return {
+            w: longestSide,
+            h: Math.max(1, Math.round((origH / origW) * longestSide))
+          };
+        }
+        return {
+          w: Math.max(1, Math.round((origW / origH) * longestSide)),
+          h: longestSide
+        };
+      }
+
+      function getActiveStateObj(mode = state.activeMode) {
+        if (mode === 'resize') return state.rs;
+        if (mode === 'upscaler') return state.up;
+        return state.vec;
+      }
+
+      function getActiveResizeRatioValue() {
+        const rs = state.rs;
+        if (rs.aspectRatio === 'original' || !RATIO_MAP[rs.aspectRatio]) {
+          return rs.origW && rs.origH ? rs.origW / rs.origH : 1;
+        }
+        return RATIO_MAP[rs.aspectRatio];
+      }
+
+      function computeUpscaleTargetDim() {
+        const up = state.up;
+        if (!up.origW || !up.origH) return;
+
+        let tw, th;
+        if (up.scaleType === 'mult') {
+          tw = Math.round(up.origW * up.scaleVal);
+          th = Math.round(up.origH * up.scaleVal);
+        } else {
+          const d = calcDimByLongest(up.origW, up.origH, up.scaleVal);
+          tw = d.w;
+          th = d.h;
+        }
+
+        const MAX_SAFE = 4096;
+        if (Math.max(tw, th) > MAX_SAFE) {
+          const capped = calcDimByLongest(tw, th, MAX_SAFE);
+          tw = capped.w;
+          th = capped.h;
+        }
+
+        up.targetW = tw;
+        up.targetH = th;
+      }
+
+      // =======================================================================
+      // 4. NAVIGASI 3 TAB UTAMA (RESIZE <-> UPSCALER HD <-> VEKTOR EPS 4K)
+      // =======================================================================
+      function switchMode(mode) {
+        if (state.isProcessing) return;
+
+        // Integrasi otomatis: jika tab tujuan belum punya gambar tapi tab aktif punya, bawa gambarnya
+        const prevObj = getActiveStateObj(state.activeMode);
+        const nextObj = getActiveStateObj(mode);
+        const shouldAutoSync = prevObj.sourceImage && !nextObj.sourceImage;
+
+        state.activeMode = mode;
+
+        const isRs = mode === 'resize';
+        const isUp = mode === 'upscaler';
+        const isVec = mode === 'vector';
+
+        const activeTabClass = 'main-tab flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-zinc-100 text-zinc-950 whitespace-nowrap transition-colors';
+        const inactiveTabClass = 'main-tab flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-zinc-400 hover:text-zinc-100 whitespace-nowrap transition-colors';
+
+        el.tabResize.className = isRs ? activeTabClass : inactiveTabClass;
+        el.tabResize.setAttribute('aria-selected', isRs ? 'true' : 'false');
+        el.tabUpscaler.className = isUp ? activeTabClass : inactiveTabClass;
+        el.tabUpscaler.setAttribute('aria-selected', isUp ? 'true' : 'false');
+        el.tabVector.className = isVec ? activeTabClass : inactiveTabClass;
+        el.tabVector.setAttribute('aria-selected', isVec ? 'true' : 'false');
+
+        // Toggle Panel Sidebar & Export Box
+        el.resizeControls.classList.toggle('hidden', !isRs);
+        el.resizeExportBox.classList.toggle('hidden', !isRs);
+        el.upscalerControls.classList.toggle('hidden', !isUp);
+        el.upscalerExportBox.classList.toggle('hidden', !isUp);
+        el.vectorControls.classList.toggle('hidden', !isVec);
+        el.vectorExportBox.classList.toggle('hidden', !isVec);
+
+        // Tombol Header
+        el.btnHeaderSample.textContent = isUp ? 'Coba Gambar Buram Contoh' : 'Coba Gambar Contoh';
+        el.btnHeaderInspectEps.classList.toggle('hidden', !isVec);
+        el.btnHeaderInspectEps.classList.toggle('sm:inline-flex', isVec);
+
+        // Toolbar Preview
+        el.tabViewResult.textContent = isRs ? 'Hasil Resize' : isUp ? 'Hasil HD' : 'Hanya Vektor';
+        el.tabViewWireframe.classList.toggle('hidden', !isVec);
+
+        if (!isVec && state.viewMode === 'wireframe') {
+          setViewMode(isRs ? 'result' : 'split');
+        } else if (isRs && state.viewMode !== 'result' && state.viewMode !== 'split' && state.viewMode !== 'original') {
+          setViewMode('result');
+        }
+
+        // Label Split Slider
+        el.splitLabelLeft.textContent = isUp ? 'ASLI BURAM' : 'ASLI';
+        el.splitLabelRight.textContent = isRs
+          ? 'HASIL RESIZE'
+          : isUp
+            ? 'HASIL HD'
+            : `VEKTOR ${state.vec.targetLongest === 3840 ? '4K' : state.vec.targetLongest === 2560 ? '2K' : 'FHD'}`;
+
+        // Teks Empty State
+        if (isRs) {
+          el.emptyTitle.textContent = 'Resize Foto & Atur Aspek Rasio Presisi';
+          el.emptyDesc.innerHTML = 'Unggah gambar <span class="font-mono text-zinc-300">.JPG</span>, <span class="font-mono text-zinc-300">.JPEG</span>, <span class="font-mono text-zinc-300">.PNG</span>, atau <span class="font-mono text-zinc-300">.WebP</span>. Perkecil ukuran foto secara kustom, pilih aspek rasio <span class="font-mono text-zinc-300">9:16</span>, <span class="font-mono text-zinc-300">16:9</span>, <span class="font-mono text-zinc-300">1:1</span>, <span class="font-mono text-zinc-300">4:3</span>, atau <span class="font-mono text-zinc-300">3:4</span>.';
+          el.btnEmptySample.textContent = 'Coba Gambar Contoh';
+        } else if (isUp) {
+          el.emptyTitle.textContent = 'Ubah Gambar Buram Menjadi Tajam & HD';
+          el.emptyDesc.innerHTML = 'Unggah gambar <span class="font-mono text-zinc-300">.JPG</span>, <span class="font-mono text-zinc-300">.PNG</span>, atau <span class="font-mono text-zinc-300">.WebP</span>. Pilih skala pengali (<span class="font-mono text-zinc-300">2×–4×</span>) atau target resolusi (<span class="font-mono text-zinc-300">HD</span> hingga <span class="font-mono text-zinc-300">4K UHD</span>) dengan penajaman Unsharp Mask.';
+          el.btnEmptySample.textContent = 'Coba Gambar Buram Contoh';
+        } else {
+          el.emptyTitle.textContent = 'Konversi Gambar Raster ke Vektor EPS 4K';
+          el.emptyDesc.innerHTML = 'Unggah gambar atau teruskan hasil dari tab <strong class="text-zinc-200 font-medium">Resize</strong> / <strong class="text-zinc-200 font-medium">Upscaler HD</strong>. Sistem melacak kurva Bézier presisi dan mengompilasi file <span class="font-mono text-zinc-300">.EPS</span> siap cetak hingga skala 4K UHD.';
+          el.btnEmptySample.textContent = 'Coba Gambar Contoh';
+        }
+
+        if (shouldAutoSync) {
+          loadImageIntoMode(prevObj.origDataUrl, {
+            name: prevObj.fileName,
+            format: prevObj.fileFormat,
+            size: prevObj.fileSize
+          }, mode);
+          return;
+        }
+
+        refreshActiveWorkspaceView();
+      }
+
+      function refreshActiveWorkspaceView() {
+        const mode = state.activeMode;
+        const activeData = getActiveStateObj(mode);
+
+        if (!activeData.sourceImage) {
+          el.fileInfoCard.classList.add('hidden');
+          el.emptyState.classList.remove('hidden');
+          el.previewStage.classList.add('hidden');
+          updateStatusBar();
+          return;
+        }
+
+        // Metadata
+        el.fileInfoCard.classList.remove('hidden');
+        el.metaFileName.textContent = activeData.fileName;
+        el.metaFileFormat.textContent = activeData.fileFormat;
+        el.metaFileSize.textContent = formatBytes(activeData.fileSize);
+        el.metaOrigDim.textContent = `${activeData.origW} × ${activeData.origH} px`;
+
+        if (mode === 'resize') {
+          el.metaTargetLabel.textContent = 'Dimensi Resize';
+          el.metaTargetDim.textContent = `${activeData.targetW} × ${activeData.targetH} px`;
+          el.metaModeBadge.textContent = activeData.aspectRatio === 'original' ? 'RASIO ASLI' : `RASIO ${activeData.aspectRatio}`;
+          if (activeData.resultBlobSize > 0) {
+            el.metaEstOutputSize.classList.remove('hidden');
+            el.metaEstOutputSize.textContent = `→ ${formatBytes(activeData.resultBlobSize)}`;
+          } else {
+            el.metaEstOutputSize.classList.add('hidden');
+          }
+        } else if (mode === 'upscaler') {
+          computeUpscaleTargetDim();
+          el.metaTargetLabel.textContent = 'Target Output HD';
+          el.metaTargetDim.textContent = `${activeData.targetW} × ${activeData.targetH} px`;
+          el.metaModeBadge.textContent = activeData.scaleType === 'mult'
+            ? `SKALA ${activeData.scaleVal}×`
+            : `${activeData.scaleVal}px`;
+          el.metaEstOutputSize.classList.add('hidden');
+        } else {
+          const d = calcDimByLongest(activeData.origW, activeData.origH, activeData.targetLongest);
+          activeData.targetW = d.w;
+          activeData.targetH = d.h;
+          el.metaTargetLabel.textContent = 'Target Vektor EPS';
+          el.metaTargetDim.textContent = `${activeData.targetW} × ${activeData.targetH} px`;
+          el.metaModeBadge.textContent = activeData.targetLongest === 3840 ? '4K UHD' : activeData.targetLongest === 2560 ? '2K QHD' : 'FULL HD';
+          el.metaEstOutputSize.classList.add('hidden');
+        }
+
+        // Tampilkan Stage & Layer yang sesuai
+        el.emptyState.classList.add('hidden');
+        el.previewStage.classList.remove('hidden');
+        el.originalPreviewImg.src = activeData.origDataUrl;
+
+        el.resizeResultImg.classList.toggle('hidden', mode !== 'resize');
+        el.hdResultImg.classList.toggle('hidden', mode !== 'upscaler');
+        el.svgContainer.classList.toggle('hidden', mode !== 'vector');
+
+        if (mode === 'resize') {
+          if (activeData.resultDataUrl) el.resizeResultImg.src = activeData.resultDataUrl;
+          fitStageToViewport(activeData.targetW || activeData.origW, activeData.targetH || activeData.origH);
+        } else if (mode === 'upscaler') {
+          if (activeData.resultDataUrl) el.hdResultImg.src = activeData.resultDataUrl;
+          fitStageToViewport(activeData.origW, activeData.origH);
+        } else {
+          if (activeData.svgString) {
+            el.svgContainer.innerHTML = activeData.svgString;
+            const svgEl = el.svgContainer.querySelector('svg');
+            if (svgEl) {
+              svgEl.setAttribute('class', 'w-full h-full block pointer-events-none select-none');
+              svgEl.style.width = '100%';
+              svgEl.style.height = '100%';
+            }
+          }
+          fitStageToViewport(activeData.origW, activeData.origH);
+        }
+
+        applyViewMode();
+        updateStatusBar();
+      }
+
+      function updateStatusBar() {
+        const mode = state.activeMode;
+        if (mode === 'resize') {
+          const rs = state.rs;
+          el.statLabel1.textContent = 'OUTPUT RESIZE:';
+          el.statLabel2.textContent = 'RASIO & MODE:';
+          el.statLabel3.textContent = 'ESTIMASI FILE:';
+          el.statEngine.textContent = 'Mesin: HTML5 Canvas Resizer (100% Client-Side)';
+
+          if (rs.sourceImage && rs.targetW) {
+            el.statVal1.textContent = `${rs.targetW} × ${rs.targetH} px`;
+            const modeLabel = rs.fitMode === 'cover' ? 'Crop' : rs.fitMode === 'contain' ? 'Fit' : 'Stretch';
+            el.statVal2.textContent = `${rs.aspectRatio === 'original' ? 'Asli' : rs.aspectRatio} · ${modeLabel}`;
+            const fmtLabel = rs.exportFormat === 'jpeg' ? 'JPG' : rs.exportFormat.toUpperCase();
+            if (rs.resultBlobSize > 0) {
+              const diffPct = rs.fileSize > 0 ? Math.round(((rs.resultBlobSize - rs.fileSize) / rs.fileSize) * 100) : 0;
+              const diffStr = diffPct < 0 ? ` (${diffPct}%)` : diffPct > 0 ? ` (+${diffPct}%)` : '';
+              el.statVal3.textContent = `${formatBytes(rs.resultBlobSize)} · ${fmtLabel}${diffStr}`;
+            } else {
+              el.statVal3.textContent = 'Menghitung...';
+            }
+          } else {
+            el.statVal1.textContent = '—';
+            el.statVal2.textContent = '—';
+            el.statVal3.textContent = '—';
+          }
+        } else if (mode === 'upscaler') {
+          el.statLabel1.textContent = 'OUTPUT HD:';
+          el.statLabel2.textContent = 'SKALA:';
+          el.statLabel3.textContent = 'UKURAN HASIL:';
+          el.statEngine.textContent = 'Mesin: Progressive Multi-Step + Unsharp Mask';
+
+          if (state.up.resultDataUrl) {
+            const ratio = (state.up.targetW / state.up.origW).toFixed(2);
+            el.statVal1.textContent = `${state.up.targetW} × ${state.up.targetH} px`;
+            el.statVal2.textContent = `${ratio}× (${state.up.exportFormat.toUpperCase()})`;
+            el.statVal3.textContent = formatBytes(state.up.resultBlobSize);
+          } else {
+            el.statVal1.textContent = '—';
+            el.statVal2.textContent = '—';
+            el.statVal3.textContent = '—';
+          }
+        } else {
+          el.statLabel1.textContent = 'RESOLUSI EPS:';
+          el.statLabel2.textContent = 'JUMLAH PATH:';
+          el.statLabel3.textContent = 'UKURAN EPS:';
+          el.statEngine.textContent = typeof window.ImageTracer !== 'undefined'
+            ? 'Mesin: ImageTracerJS + EPSF-3.0'
+            : 'Mesin: Fallback Tracer + EPSF-3.0';
+
+          if (state.vec.epsString) {
+            el.statVal1.textContent = `${state.vec.targetW} × ${state.vec.targetH} px`;
+            el.statVal2.textContent = state.vec.pathCount.toLocaleString('id-ID');
+            el.statVal3.textContent = formatBytes(state.vec.epsByteSize);
+          } else {
+            el.statVal1.textContent = '—';
+            el.statVal2.textContent = '—';
+            el.statVal3.textContent = '—';
+          }
+        }
+      }
+
+      // =======================================================================
+      // 5. UPLOAD FILE & PEMBUATAN GAMBAR SAMPEL
+      // =======================================================================
+      function handleFileUpload(file) {
+        if (!file) return;
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        const allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
+
+        if (!allowedTypes.includes(file.type) && !allowedExt.includes(ext)) {
+          showToast('Format tidak didukung. Gunakan file JPG, JPEG, PNG, atau WebP.', 'error');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          loadImageIntoMode(e.target.result, {
+            name: file.name,
+            format: ext.toUpperCase() || file.type.replace('image/', '').toUpperCase(),
+            size: file.size
+          });
+        };
+        reader.onerror = () => showToast('Gagal membaca file gambar.', 'error');
+        reader.readAsDataURL(file);
+      }
+
+      function loadImageIntoMode(dataUrl, meta, forceMode = null) {
+        const targetMode = forceMode || state.activeMode;
+        const img = new Image();
+        img.onload = () => {
+          if (targetMode === 'resize') {
+            const rs = state.rs;
+            rs.sourceImage = img;
+            rs.origDataUrl = dataUrl;
+            rs.fileName = meta.name;
+            rs.fileFormat = meta.format;
+            rs.fileSize = meta.size;
+            rs.origW = img.naturalWidth;
+            rs.origH = img.naturalHeight;
+
+            // Hitung dimensi awal sesuai rasio & skala saat ini
+            recalcResizeDimensionsFromScale();
+            syncResizeInputsUI();
+
+            if (state.activeMode !== 'resize') switchMode('resize');
+            setViewMode('result');
+            renderResizeCanvas();
+          } else if (targetMode === 'upscaler') {
+            const up = state.up;
+            up.sourceImage = img;
+            up.origDataUrl = dataUrl;
+            up.fileName = meta.name;
+            up.fileFormat = meta.format;
+            up.fileSize = meta.size;
+            up.origW = img.naturalWidth;
+            up.origH = img.naturalHeight;
+            computeUpscaleTargetDim();
+            el.btnRunUpscale.disabled = false;
+
+            if (state.activeMode !== 'upscaler') switchMode('upscaler');
+            setViewMode('split');
+            refreshActiveWorkspaceView();
+            runUpscalePipeline();
+          } else {
+            const vec = state.vec;
+            vec.sourceImage = img;
+            vec.origDataUrl = dataUrl;
+            vec.fileName = meta.name;
+            vec.fileFormat = meta.format;
+            vec.fileSize = meta.size;
+            vec.origW = img.naturalWidth;
+            vec.origH = img.naturalHeight;
+            const d = calcDimByLongest(img.naturalWidth, img.naturalHeight, vec.targetLongest);
+            vec.targetW = d.w;
+            vec.targetH = d.h;
+            el.btnRunVector.disabled = false;
+
+            if (state.activeMode !== 'vector') switchMode('vector');
+            setViewMode('split');
+            refreshActiveWorkspaceView();
+            runVectorizationPipeline();
+          }
+        };
+        img.onerror = () => showToast('Gambar tidak valid atau rusak.', 'error');
+        img.src = dataUrl;
+      }
+
+      /**
+       * Gambar sampel resolusi tinggi (1920 x 1280) untuk pengujian Tab Resize & Aspek Rasio.
+       */
+      function generateHighResSampleImage() {
+        const c = document.createElement('canvas');
+        c.width = 1920;
+        c.height = 1280;
+        const ctx = c.getContext('2d');
+
+        // Latar editorial minimalis
+        const sky = ctx.createLinearGradient(0, 0, 0, 1280);
+        sky.addColorStop(0, '#18181b');
+        sky.addColorStop(0.55, '#27272a');
+        sky.addColorStop(1, '#3f3f46');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, 1920, 1280);
+
+        // Grid arsitektur halus
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.lineWidth = 2;
+        for (let x = 0; x <= 1920; x += 120) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 1280); ctx.stroke();
+        }
+        for (let y = 0; y <= 1280; y += 120) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1920, y); ctx.stroke();
+        }
+
+        // Elemen matahari / aksen geometris
+        ctx.fillStyle = '#e4e4e7';
+        ctx.beginPath();
+        ctx.arc(1360, 380, 170, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Siluet arsitektur berlapis
+        ctx.fillStyle = '#09090b';
+        ctx.beginPath();
+        ctx.moveTo(0, 960);
+        ctx.lineTo(420, 480);
+        ctx.lineTo(860, 880);
+        ctx.lineTo(1260, 560);
+        ctx.lineTo(1920, 940);
+        ctx.lineTo(1920, 1280);
+        ctx.lineTo(0, 1280);
+        ctx.closePath();
+        ctx.fill();
+
+        // Kartu fokus di tengah (membantu melihat hasil crop 9:16, 1:1, 4:3, dll.)
+        ctx.fillStyle = '#f4f4f5';
+        ctx.fillRect(620, 440, 680, 400);
+        ctx.strokeStyle = '#09090b';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(644, 464, 632, 352);
+
+        ctx.fillStyle = '#09090b';
+        ctx.font = 'bold 64px Inter, sans-serif';
+        ctx.fillText('STUDIO 1920', 745, 610);
+        ctx.font = '500 30px JetBrains Mono, monospace';
+        ctx.fillStyle = '#52525b';
+        ctx.fillText('1920 x 1280 PX · SAMPLE', 748, 675);
+
+        // Garis aksen
+        ctx.fillStyle = '#09090b';
+        ctx.fillRect(748, 720, 220, 14);
+        ctx.fillStyle = '#a1a1aa';
+        ctx.fillRect(985, 720, 120, 14);
+
+        const dataUrl = c.toDataURL('image/jpeg', 0.92);
+        const approxBytes = Math.round((dataUrl.length * 3) / 4);
+        loadImageIntoMode(dataUrl, {
+          name: 'sampel_editorial_1920x1280.jpg',
+          format: 'JPG',
+          size: approxBytes
+        }, 'resize');
+      }
+
+      /**
+       * Gambar sampel buram 420x280 untuk pengujian Tab Upscaler HD.
+       */
+      function generateBlurrySampleImage() {
+        const c = document.createElement('canvas');
+        c.width = 420;
+        c.height = 280;
+        const ctx = c.getContext('2d');
+
+        ctx.filter = 'blur(1.4px)';
+        const grad = ctx.createLinearGradient(0, 0, 0, 280);
+        grad.addColorStop(0, '#1e293b');
+        grad.addColorStop(0.55, '#475569');
+        grad.addColorStop(1, '#cbd5e1');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 420, 280);
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(320, 75, 34, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(35, 110, 70, 170);
+        ctx.fillRect(118, 70, 82, 210);
+        ctx.fillRect(212, 130, 68, 150);
+        ctx.fillRect(295, 150, 90, 130);
+
+        ctx.fillStyle = '#fef3c7';
+        for (let row = 0; row < 6; row++) {
+          for (let col = 0; col < 3; col++) {
+            ctx.fillRect(130 + col * 22, 86 + row * 24, 12, 14);
+          }
+        }
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.fillRect(28, 22, 195, 38);
+        ctx.fillStyle = '#09090b';
+        ctx.font = 'bold 16px Inter, sans-serif';
+        ctx.fillText('STUDIO ARCHIVE 04', 40, 47);
+
+        ctx.filter = 'none';
+        const imgData = ctx.getImageData(0, 0, c.width, c.height);
+        const d = imgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const n = (Math.random() - 0.5) * 14;
+          d[i] = Math.max(0, Math.min(255, d[i] + n));
+          d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n));
+          d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + n));
+        }
+        ctx.putImageData(imgData, 0, 0);
+
+        const dataUrl = c.toDataURL('image/jpeg', 0.65);
+        const approxBytes = Math.round((dataUrl.length * 3) / 4);
+        loadImageIntoMode(dataUrl, {
+          name: 'sampel_foto_buram_420px.jpg',
+          format: 'JPG',
+          size: approxBytes
+        }, 'upscaler');
+      }
+
+      /**
+       * Gambar sampel ilustrasi geometris untuk pengujian Tab Vektor EPS.
+       */
+      function generateVectorSampleImage() {
+        const c = document.createElement('canvas');
+        c.width = 800;
+        c.height = 540;
+        const ctx = c.getContext('2d');
+
+        ctx.fillStyle = '#f4f1ea';
+        ctx.fillRect(0, 0, c.width, c.height);
+
+        ctx.fillStyle = '#e05a33';
+        ctx.beginPath();
+        ctx.arc(560, 170, 88, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#2d4059';
+        ctx.beginPath();
+        ctx.moveTo(0, 420);
+        ctx.lineTo(240, 175);
+        ctx.lineTo(460, 380);
+        ctx.lineTo(630, 240);
+        ctx.lineTo(800, 390);
+        ctx.lineTo(800, 540);
+        ctx.lineTo(0, 540);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#1b263b';
+        ctx.beginPath();
+        ctx.moveTo(0, 460);
+        ctx.lineTo(180, 310);
+        ctx.lineTo(390, 460);
+        ctx.lineTo(580, 330);
+        ctx.lineTo(800, 470);
+        ctx.lineTo(800, 540);
+        ctx.lineTo(0, 540);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#d9a05b';
+        ctx.fillRect(60, 475, 220, 18);
+        ctx.fillStyle = '#e05a33';
+        ctx.fillRect(300, 475, 90, 18);
+
+        ctx.strokeStyle = '#1b263b';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(24, 24, c.width - 48, c.height - 48);
+
+        const dataUrl = c.toDataURL('image/png');
+        const approxBytes = Math.round((dataUrl.length * 3) / 4);
+        loadImageIntoMode(dataUrl, {
+          name: 'contoh_ilustrasi_geometris.png',
+          format: 'PNG',
+          size: approxBytes
+        }, 'vector');
+      }
+
+      // =======================================================================
+      // 6. PIPELINE FITUR 1 (DEFAULT): RESIZE & ASPEK RASIO
+      // =======================================================================
+      let resizeDebounceTimer = null;
+
+      function recalcResizeDimensionsFromScale() {
+        const rs = state.rs;
+        if (!rs.origW || !rs.origH) return;
+
+        const ratio = getActiveResizeRatioValue();
+        const factor = rs.scalePct / 100;
+
+        if (rs.aspectRatio === 'original') {
+          rs.targetW = Math.max(16, Math.round(rs.origW * factor));
+          rs.targetH = Math.max(16, Math.round(rs.origH * factor));
+        } else {
+          // Gunakan sisi terpanjang sebagai patokan skala agar proporsional & tidak membesar melebihi asli saat 100%
+          const baseLongest = Math.max(16, Math.round(Math.max(rs.origW, rs.origH) * factor));
+          if (ratio >= 1) {
+            rs.targetW = baseLongest;
+            rs.targetH = Math.max(16, Math.round(baseLongest / ratio));
+          } else {
+            rs.targetH = baseLongest;
+            rs.targetW = Math.max(16, Math.round(baseLongest * ratio));
+          }
+        }
+      }
+
+      function syncResizeInputsUI() {
+        const rs = state.rs;
+        el.inputResizeW.value = rs.targetW || '';
+        el.inputResizeH.value = rs.targetH || '';
+        el.sliderResizeScale.value = rs.scalePct;
+        el.valResizeScale.textContent = `${rs.scalePct}%`;
+        el.valActiveRatio.textContent = rs.aspectRatio === 'original' ? 'Asli' : rs.aspectRatio;
+
+        // Status gembok rasio
+        el.btnLockRatio.setAttribute('aria-pressed', rs.lockRatio ? 'true' : 'false');
+        el.btnLockRatio.className = rs.lockRatio
+          ? 'h-[34px] px-2.5 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 flex items-center justify-center transition-colors'
+          : 'h-[34px] px-2.5 rounded border border-[#27272a] bg-[#18181b] text-zinc-400 hover:text-zinc-100 flex items-center justify-center transition-colors';
+        el.iconLockClosed.classList.toggle('hidden', !rs.lockRatio);
+        el.iconLockOpen.classList.toggle('hidden', rs.lockRatio);
+
+        // Toggle panel fokus crop vs latar contain
+        el.cropFocusBox.classList.toggle('hidden', rs.fitMode !== 'cover');
+        el.containBgBox.classList.toggle('hidden', rs.fitMode !== 'contain');
+
+        // Kualitas kompresi (disabled untuk PNG lossless)
+        const isLossless = rs.exportFormat === 'png';
+        el.sliderResizeQuality.disabled = isLossless;
+        el.resizeQualityWrap.classList.toggle('opacity-45', isLossless);
+        el.valResizeQuality.textContent = isLossless ? 'Lossless (PNG)' : `${rs.quality}%`;
+      }
+
+      function scheduleResizeRender(delay = 35) {
+        clearTimeout(resizeDebounceTimer);
+        resizeDebounceTimer = setTimeout(() => {
+          renderResizeCanvas();
+        }, delay);
+      }
+
+      /**
+       * Merender hasil resize & aspek rasio secara presisi di HTML5 Canvas
+       * menggunakan algoritma bertahap bila downscaling sangat besar agar hasil tetap tajam.
+       */
+      function renderResizeCanvas() {
+        const rs = state.rs;
+        if (!rs.sourceImage || !rs.targetW || !rs.targetH) return;
+
+        const targetW = Math.max(16, Math.min(8192, Math.round(rs.targetW)));
+        const targetH = Math.max(16, Math.min(8192, Math.round(rs.targetH)));
+        rs.targetW = targetW;
+        rs.targetH = targetH;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        const srcW = rs.sourceImage.naturalWidth;
+        const srcH = rs.sourceImage.naturalHeight;
+
+        // Jika ekspor JPEG, isi dasar latar agar area transparan tidak berubah menjadi hitam
+        if (rs.exportFormat === 'jpeg') {
+          ctx.fillStyle = rs.fitMode === 'contain' && rs.containBg === 'black' ? '#000000' : '#ffffff';
+          ctx.fillRect(0, 0, targetW, targetH);
+        }
+
+        if (rs.fitMode === 'stretch') {
+          ctx.drawImage(rs.sourceImage, 0, 0, srcW, srcH, 0, 0, targetW, targetH);
+        } else if (rs.fitMode === 'cover') {
+          // Hitung area potong presisi berdasarkan rasio target dan titik fokus (focusX, focusY)
+          const srcRatio = srcW / srcH;
+          const tgtRatio = targetW / targetH;
+          let cropW = srcW, cropH = srcH, cropX = 0, cropY = 0;
+
+          if (srcRatio > tgtRatio) {
+            // Gambar lebih lebar dari target -> potong sisi kiri/kanan
+            cropW = srcH * tgtRatio;
+            cropX = (srcW - cropW) * (rs.focusX / 100);
+          } else {
+            // Gambar lebih tinggi dari target -> potong sisi atas/bawah
+            cropH = srcW / tgtRatio;
+            cropY = (srcH - cropH) * (rs.focusY / 100);
+          }
+
+          ctx.drawImage(rs.sourceImage, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+        } else if (rs.fitMode === 'contain') {
+          // Isi latar belakang sesuai pilihan
+          if (rs.containBg === 'black') {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, targetW, targetH);
+          } else if (rs.containBg === 'white') {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, targetW, targetH);
+          } else if (rs.containBg === 'blur') {
+            // Latar blur dari gambar asli
+            ctx.save();
+            const blurRadius = Math.max(12, Math.round(Math.min(targetW, targetH) * 0.035));
+            ctx.filter = `blur(${blurRadius}px) brightness(0.75)`;
+            const scaleBg = Math.max(targetW / srcW, targetH / srcH) * 1.12;
+            const bgW = srcW * scaleBg;
+            const bgH = srcH * scaleBg;
+            ctx.drawImage(rs.sourceImage, (targetW - bgW) / 2, (targetH - bgH) / 2, bgW, bgH);
+            ctx.restore();
+          }
+
+          // Gambar utama utuh di tengah
+          const scale = Math.min(targetW / srcW, targetH / srcH);
+          const drawW = srcW * scale;
+          const drawH = srcH * scale;
+          const dx = (targetW - drawW) / 2;
+          const dy = (targetH - drawH) / 2;
+          ctx.drawImage(rs.sourceImage, 0, 0, srcW, srcH, dx, dy, drawW, drawH);
+        }
+
+        rs.resultCanvas = canvas;
+
+        const mime = rs.exportFormat === 'jpeg'
+          ? 'image/jpeg'
+          : rs.exportFormat === 'webp'
+            ? 'image/webp'
+            : 'image/png';
+        const q = rs.exportFormat === 'png' ? undefined : rs.quality / 100;
+
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          if (rs.resultDataUrl && rs.resultDataUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(rs.resultDataUrl);
+          }
+          rs.resultDataUrl = URL.createObjectURL(blob);
+          rs.resultBlobSize = blob.size;
+
+          el.btnDownloadResize.disabled = false;
+          el.btnResizeToUpscaler.disabled = false;
+          el.btnResizeToVector.disabled = false;
+
+          if (state.activeMode === 'resize') {
+            refreshActiveWorkspaceView();
+          }
+        }, mime, q);
+      }
+
+      function sendResizeResultTo(targetMode) {
+        const rs = state.rs;
+        if (!rs.resultCanvas) return;
+        const dataUrl = rs.resultCanvas.toDataURL('image/png');
+        const baseName = (rs.fileName || 'gambar').replace(/\.[^/.]+$/, '');
+        loadImageIntoMode(dataUrl, {
+          name: `${baseName}_${rs.targetW}x${rs.targetH}.png`,
+          format: 'PNG',
+          size: rs.resultBlobSize
+        }, targetMode);
+        const label = targetMode === 'upscaler' ? 'Upscaler HD' : 'Vektor EPS 4K';
+        showToast(`Hasil resize berhasil dikirim ke tab ${label}.`, 'success');
+      }
+
+      // =======================================================================
+      // 7. OVERLAY PROGRESS HELPER (UPSCALER & VEKTOR)
+      // =======================================================================
+      function setProgressUI(title, labels, percent, activeStep) {
+        el.progressTitle.innerHTML = `<span class="w-2 h-2 rounded-full bg-zinc-100 animate-pulse"></span>${title}`;
+        el.progressBar.style.width = `${percent}%`;
+        el.progressPercent.textContent = `${percent}%`;
+
+        const steps = [el.step1, el.step2, el.step3];
+        steps.forEach((stepEl, idx) => {
+          const stepNum = idx + 1;
+          stepEl.querySelector('.step-label').textContent = labels[idx];
+          const badge = stepEl.querySelector('.step-status');
+          if (stepNum < activeStep) {
+            stepEl.className = 'flex items-center justify-between text-zinc-200';
+            badge.className = 'step-status text-zinc-300';
+            badge.textContent = 'Selesai';
+          } else if (stepNum === activeStep) {
+            stepEl.className = 'flex items-center justify-between text-white font-semibold';
+            badge.className = 'step-status text-white';
+            badge.textContent = 'Memproses...';
+          } else {
+            stepEl.className = 'flex items-center justify-between text-zinc-500';
+            badge.className = 'step-status text-zinc-600';
+            badge.textContent = 'Menunggu';
+          }
+        });
+      }
+
+      // =======================================================================
+      // 8. PIPELINE FITUR 2: UPSCALER HD & PENAJAM GAMBAR BURAM
+      // =======================================================================
+      function progressiveUpscaleCanvas(sourceImg, targetW, targetH) {
+        let curCanvas = document.createElement('canvas');
+        let curW = sourceImg.naturalWidth;
+        let curH = sourceImg.naturalHeight;
+        curCanvas.width = curW;
+        curCanvas.height = curH;
+
+        let curCtx = curCanvas.getContext('2d', { willReadFrequently: true });
+        curCtx.imageSmoothingEnabled = true;
+        curCtx.imageSmoothingQuality = 'high';
+        curCtx.drawImage(sourceImg, 0, 0, curW, curH);
+
+        while (curW * 1.6 < targetW && curH * 1.6 < targetH) {
+          const nextW = Math.round(curW * 1.5);
+          const nextH = Math.round(curH * 1.5);
+          const nextCanvas = document.createElement('canvas');
+          nextCanvas.width = nextW;
+          nextCanvas.height = nextH;
+          const nextCtx = nextCanvas.getContext('2d', { willReadFrequently: true });
+          nextCtx.imageSmoothingEnabled = true;
+          nextCtx.imageSmoothingQuality = 'high';
+          nextCtx.drawImage(curCanvas, 0, 0, curW, curH, 0, 0, nextW, nextH);
+
+          curCanvas = nextCanvas;
+          curW = nextW;
+          curH = nextH;
+        }
+
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = targetW;
+        finalCanvas.height = targetH;
+        const finalCtx = finalCanvas.getContext('2d', { willReadFrequently: true });
+        finalCtx.imageSmoothingEnabled = true;
+        finalCtx.imageSmoothingQuality = 'high';
+        finalCtx.drawImage(curCanvas, 0, 0, curW, curH, 0, 0, targetW, targetH);
+
+        return finalCanvas;
+      }
+
+      function applyEdgePreservingDenoise(imageData, strengthPct) {
+        if (strengthPct <= 0) return imageData;
+        const w = imageData.width;
+        const h = imageData.height;
+        const src = imageData.data;
+        const out = new Uint8ClampedArray(src.length);
+
+        const blend = (strengthPct / 100) * 0.75;
+        const threshold = 22 + (strengthPct / 100) * 28;
+
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4;
+            if (x === 0 || x === w - 1 || y === 0 || y === h - 1) {
+              out[idx] = src[idx];
+              out[idx + 1] = src[idx + 1];
+              out[idx + 2] = src[idx + 2];
+              out[idx + 3] = src[idx + 3];
+              continue;
+            }
+
+            const cr = src[idx], cg = src[idx + 1], cb = src[idx + 2];
+            let sumR = cr, sumG = cg, sumB = cb, count = 1;
+
+            const neighbors = [
+              ((y - 1) * w + x) * 4,
+              ((y + 1) * w + x) * 4,
+              (y * w + (x - 1)) * 4,
+              (y * w + (x + 1)) * 4
+            ];
+
+            for (let n = 0; n < 4; n++) {
+              const ni = neighbors[n];
+              const diff = Math.abs(src[ni] - cr) + Math.abs(src[ni + 1] - cg) + Math.abs(src[ni + 2] - cb);
+              if (diff < threshold * 3) {
+                sumR += src[ni];
+                sumG += src[ni + 1];
+                sumB += src[ni + 2];
+                count++;
+              }
+            }
+
+            out[idx]     = cr + (sumR / count - cr) * blend;
+            out[idx + 1] = cg + (sumG / count - cg) * blend;
+            out[idx + 2] = cb + (sumB / count - cb) * blend;
+            out[idx + 3] = src[idx + 3];
+          }
+        }
+        return new ImageData(out, w, h);
+      }
+
+      function applyUnsharpAndSharpen(imageData, sharpenPct) {
+        if (sharpenPct <= 0) return imageData;
+        const w = imageData.width;
+        const h = imageData.height;
+        const src = imageData.data;
+        const out = new Uint8ClampedArray(src.length);
+
+        const k = (sharpenPct / 100) * 1.45;
+        const diagK = k * 0.25;
+        const cardK = k * 0.75;
+        const center = 1 + 4 * cardK + 4 * diagK;
+
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4;
+            if (x === 0 || x === w - 1 || y === 0 || y === h - 1) {
+              out[idx] = src[idx];
+              out[idx + 1] = src[idx + 1];
+              out[idx + 2] = src[idx + 2];
+              out[idx + 3] = src[idx + 3];
+              continue;
+            }
+
+            const up    = ((y - 1) * w + x) * 4;
+            const down  = ((y + 1) * w + x) * 4;
+            const left  = (y * w + (x - 1)) * 4;
+            const right = (y * w + (x + 1)) * 4;
+            const ul    = ((y - 1) * w + (x - 1)) * 4;
+            const ur    = ((y - 1) * w + (x + 1)) * 4;
+            const dl    = ((y + 1) * w + (x - 1)) * 4;
+            const dr    = ((y + 1) * w + (x + 1)) * 4;
+
+            for (let c = 0; c < 3; c++) {
+              const cardSum = src[up + c] + src[down + c] + src[left + c] + src[right + c];
+              const diagSum = src[ul + c] + src[ur + c] + src[dl + c] + src[dr + c];
+              const val = src[idx + c] * center - cardSum * cardK - diagSum * diagK;
+              out[idx + c] = val < 0 ? 0 : (val > 255 ? 255 : val);
+            }
+            out[idx + 3] = src[idx + 3];
+          }
+        }
+        return new ImageData(out, w, h);
+      }
+
+      function applyContrastClarity(imageData, contrastVal) {
+        if (contrastVal === 0) return imageData;
+        const d = imageData.data;
+        const c = contrastVal * 1.8;
+        const factor = (259 * (c + 255)) / (255 * (259 - c));
+
+        for (let i = 0; i < d.length; i += 4) {
+          d[i]     = Math.max(0, Math.min(255, factor * (d[i] - 128) + 128));
+          d[i + 1] = Math.max(0, Math.min(255, factor * (d[i + 1] - 128) + 128));
+          d[i + 2] = Math.max(0, Math.min(255, factor * (d[i + 2] - 128) + 128));
+        }
+        return imageData;
+      }
+
+      async function runUpscalePipeline() {
+        const up = state.up;
+        if (!up.sourceImage || state.isProcessing) return;
+
+        state.isProcessing = true;
+        computeUpscaleTargetDim();
+        el.processingOverlay.classList.remove('hidden');
+        el.btnDownloadHd.disabled = true;
+        el.btnSendToVector.disabled = true;
+
+        const labels = [
+          '1. Progressive Multi-Step Upscaling',
+          '2. Denoise & Deblur Unsharp Mask',
+          '3. Kontras, Kejernihan & Render HD'
+        ];
+
+        try {
+          setProgressUI('Memproses Upscaler HD', labels, 20, 1);
+          await yieldToUI(40);
+
+          const upscaledCanvas = progressiveUpscaleCanvas(up.sourceImage, up.targetW, up.targetH);
+          const ctx = upscaledCanvas.getContext('2d', { willReadFrequently: true });
+          let imgData = ctx.getImageData(0, 0, up.targetW, up.targetH);
+
+          setProgressUI('Memproses Upscaler HD', labels, 55, 2);
+          await yieldToUI(40);
+
+          if (up.denoise > 0) imgData = applyEdgePreservingDenoise(imgData, up.denoise);
+          if (up.sharpen > 0) imgData = applyUnsharpAndSharpen(imgData, up.sharpen);
+
+          setProgressUI('Memproses Upscaler HD', labels, 85, 3);
+          await yieldToUI(35);
+
+          if (up.contrast !== 0) imgData = applyContrastClarity(imgData, up.contrast);
+
+          ctx.putImageData(imgData, 0, 0);
+          up.resultCanvas = upscaledCanvas;
+
+          await updateHdExportDataUrl();
+
+          setProgressUI('Memproses Upscaler HD', labels, 100, 4);
+          await yieldToUI(70);
+
+          el.hdResultImg.src = up.resultDataUrl;
+          el.btnDownloadHd.disabled = false;
+          el.btnSendToVector.disabled = false;
+
+          refreshActiveWorkspaceView();
+          showToast(`Upscale HD selesai (${up.targetW} × ${up.targetH} px).`, 'success');
+        } catch (err) {
+          console.error('Error Upscaler HD:', err);
+          showToast('Gagal memproses gambar HD. Coba skala yang lebih kecil.', 'error');
+        } finally {
+          state.isProcessing = false;
+          el.processingOverlay.classList.add('hidden');
+        }
+      }
+
+      function updateHdExportDataUrl() {
+        return new Promise((resolve) => {
+          const up = state.up;
+          if (!up.resultCanvas) return resolve();
+
+          const mime = up.exportFormat === 'jpeg'
+            ? 'image/jpeg'
+            : up.exportFormat === 'webp'
+              ? 'image/webp'
+              : 'image/png';
+          const quality = up.exportFormat === 'png' ? undefined : 0.94;
+
+          up.resultCanvas.toBlob((blob) => {
+            if (blob) {
+              if (up.resultDataUrl && up.resultDataUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(up.resultDataUrl);
+              }
+              up.resultDataUrl = URL.createObjectURL(blob);
+              up.resultBlobSize = blob.size;
+            }
+            resolve();
+          }, mime, quality);
+        });
+      }
+
+      function sendHdResultToVector() {
+        if (!state.up.resultCanvas) return;
+        const dataUrl = state.up.resultCanvas.toDataURL('image/png');
+        const baseName = (state.up.fileName || 'gambar').replace(/\.[^/.]+$/, '');
+        loadImageIntoMode(dataUrl, {
+          name: `${baseName}_HD_${state.up.targetW}px.png`,
+          format: 'PNG',
+          size: state.up.resultBlobSize
+        }, 'vector');
+        showToast('Gambar HD berhasil diteruskan ke studio Vektor EPS.', 'success');
+      }
+
+      // =======================================================================
+      // 9. PIPELINE FITUR 3: KONVERSI VEKTOR EPS 4K
+      // =======================================================================
+      function applyBlackWhitePreprocess(imageData) {
+        const d = imageData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+          const bw = lum > 135 ? 255 : 0;
+          d[i] = bw; d[i + 1] = bw; d[i + 2] = bw;
+        }
+        return imageData;
+      }
+
+      async function runVectorizationPipeline() {
+        const vec = state.vec;
+        if (!vec.sourceImage || state.isProcessing) return;
+
+        state.isProcessing = true;
+        const d = calcDimByLongest(vec.origW, vec.origH, vec.targetLongest);
+        vec.targetW = d.w;
+        vec.targetH = d.h;
+
+        el.processingOverlay.classList.remove('hidden');
+        el.btnDownloadEps.disabled = true;
+        el.btnDownloadSvg.disabled = true;
+        el.btnInspectEpsSide.disabled = true;
+        el.btnHeaderInspectEps.disabled = true;
+
+        const labels = [
+          '1. Persiapan Kanvas & Pra-Penajaman',
+          '2. Tracing Kurva Vektor Bézier',
+          `3. Kompilasi EPSF-3.0 (${vec.targetLongest}px)`
+        ];
+
+        try {
+          setProgressUI('Memproses Vektor EPS', labels, 18, 1);
+          await yieldToUI(40);
+
+          const TRACE_MAX = 1150;
+          const aspect = vec.origW / vec.origH;
+          let traceW, traceH;
+          if (vec.origW >= vec.origH) {
+            traceW = Math.min(TRACE_MAX, Math.max(vec.origW * 2, 720));
+            if (vec.origW > TRACE_MAX) traceW = TRACE_MAX;
+            traceH = Math.max(1, Math.round(traceW / aspect));
+          } else {
+            traceH = Math.min(TRACE_MAX, Math.max(vec.origH * 2, 720));
+            if (vec.origH > TRACE_MAX) traceH = TRACE_MAX;
+            traceW = Math.max(1, Math.round(traceH * aspect));
+          }
+
+          const workCanvas = document.createElement('canvas');
+          workCanvas.width = traceW;
+          workCanvas.height = traceH;
+          const ctx = workCanvas.getContext('2d', { willReadFrequently: true });
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(vec.sourceImage, 0, 0, traceW, traceH);
+
+          let imgData = ctx.getImageData(0, 0, traceW, traceH);
+
+          if (vec.sharpen) imgData = applyUnsharpAndSharpen(imgData, 42);
+          if (vec.preset === 'bw' && vec.colors === 2) imgData = applyBlackWhitePreprocess(imgData);
+
+          setProgressUI('Memproses Vektor EPS', labels, 45, 2);
+          await yieldToUI(45);
+
+          const scaleFactor = vec.targetW / traceW;
+          let pathsData = [];
+
+          if (typeof window.ImageTracer !== 'undefined') {
+            pathsData = traceWithImageTracer(imgData, scaleFactor);
+          } else {
+            pathsData = traceWithFallbackEngine(imgData, scaleFactor);
+          }
+
+          vec.svgString = buildScaledSVG(pathsData, vec.targetW, vec.targetH);
+          vec.pathCount = pathsData.length;
+
+          setProgressUI('Memproses Vektor EPS', labels, 78, 3);
+          await yieldToUI(40);
+
+          vec.epsString = compilePathsToEPS(pathsData, vec.targetW, vec.targetH, vec.fileName);
+          vec.epsByteSize = new Blob([vec.epsString]).size;
+
+          setProgressUI('Memproses Vektor EPS', labels, 100, 4);
+          await yieldToUI(70);
+
+          el.btnDownloadEps.disabled = false;
+          el.btnDownloadSvg.disabled = false;
+          el.btnInspectEpsSide.disabled = false;
+          el.btnHeaderInspectEps.disabled = false;
+
+          el.splitLabelRight.textContent = `VEKTOR ${vec.targetLongest === 3840 ? '4K' : vec.targetLongest === 2560 ? '2K' : 'FHD'}`;
+          refreshActiveWorkspaceView();
+
+          showToast(`Vektor EPS selesai (${vec.pathCount.toLocaleString('id-ID')} path).`, 'success');
+        } catch (err) {
+          console.error('Error Vektorisasi:', err);
+          showToast('Terjadi kesalahan saat memproses vektorisasi.', 'error');
+        } finally {
+          state.isProcessing = false;
+          el.processingOverlay.classList.add('hidden');
+        }
+      }
+
+      function traceWithImageTracer(imgData, scaleFactor) {
+        const vec = state.vec;
+        const ltres = Number((2.2 - (vec.detail / 100) * 1.9).toFixed(2));
+        const pathomit = Math.max(1, Math.round(16 - (vec.detail / 100) * 14));
+        const qtres = Number((0.4 + (vec.smooth / 100) * 2.0).toFixed(2));
+        const blurradius = vec.smooth >= 70 ? 2 : (vec.smooth >= 40 ? 1 : 0);
+
+        const options = {
+          ltres,
+          qtres,
+          pathomit,
+          rightangleenhance: vec.preset === 'logo' || vec.preset === 'bw',
+          colorsampling: vec.preset === 'bw' ? 0 : 2,
+          numberofcolors: vec.colors,
+          mincolorratio: 0,
+          colorquantcycles: 3,
+          scale: scaleFactor,
+          roundcoords: 2,
+          viewbox: true,
+          blurradius,
+          blurdelta: 20
+        };
+
+        const rawSvg = window.ImageTracer.imagedataToSVG(imgData, options);
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(rawSvg, 'image/svg+xml');
+        const extracted = [];
+
+        doc.querySelectorAll('path').forEach((p) => {
+          const d = p.getAttribute('d');
+          const fill = p.getAttribute('fill') || 'rgb(0,0,0)';
+          const opAttr = p.getAttribute('opacity');
+          const opacity = opAttr !== null ? parseFloat(opAttr) : 1;
+          if (d && opacity > 0.02) {
+            extracted.push({ d: d.trim(), fill, opacity });
+          }
+        });
+        return extracted;
+      }
+
+      function traceWithFallbackEngine(imgData, scaleFactor) {
+        const vec = state.vec;
+        const w = imgData.width;
+        const h = imgData.height;
+        const data = imgData.data;
+        const step = Math.max(2, Math.round(10 - (vec.detail / 100) * 7));
+        const levels = Math.max(2, Math.round(Math.cbrt(vec.colors) + 1));
+        const qStep = 255 / (levels - 1);
+        const colorBuckets = new Map();
+
+        for (let y = 0; y < h; y += step) {
+          let runStart = 0;
+          let prevColor = null;
+          for (let x = 0; x <= w; x += step) {
+            let colorKey = null;
+            if (x < w) {
+              const idx = (y * w + x) * 4;
+              if (data[idx + 3] > 20) {
+                const r = Math.round(Math.round(data[idx] / qStep) * qStep);
+                const g = Math.round(Math.round(data[idx + 1] / qStep) * qStep);
+                const b = Math.round(Math.round(data[idx + 2] / qStep) * qStep);
+                colorKey = `rgb(${r},${g},${b})`;
+              }
+            }
+            if (colorKey !== prevColor) {
+              if (prevColor !== null) {
+                const x1 = (runStart * scaleFactor).toFixed(2);
+                const y1 = (y * scaleFactor).toFixed(2);
+                const x2 = (Math.min(x, w) * scaleFactor).toFixed(2);
+                const y2 = (Math.min(y + step, h) * scaleFactor).toFixed(2);
+                const seg = `M ${x1} ${y1} L ${x2} ${y1} L ${x2} ${y2} L ${x1} ${y2} Z `;
+                if (!colorBuckets.has(prevColor)) colorBuckets.set(prevColor, []);
+                colorBuckets.get(prevColor).push(seg);
+              }
+              prevColor = colorKey;
+              runStart = x;
+            }
+          }
+        }
+
+        const extracted = [];
+        colorBuckets.forEach((segments, fill) => {
+          extracted.push({ d: segments.join('').trim(), fill, opacity: 1 });
+        });
+        return extracted;
+      }
+
+      function buildScaledSVG(pathsData, width, height) {
+        const parts = [
+          `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">`
+        ];
+        for (let i = 0; i < pathsData.length; i++) {
+          const p = pathsData[i];
+          const opAttr = p.opacity < 1 ? ` fill-opacity="${p.opacity.toFixed(2)}"` : '';
+          parts.push(`<path d="${p.d}" fill="${p.fill}"${opAttr} />`);
+        }
+        parts.push('</svg>');
+        return parts.join('\n');
+      }
+
+      function parseCssColorToRgbFloat(colorStr) {
+        let r = 0, g = 0, b = 0;
+        if (colorStr.startsWith('rgb')) {
+          const nums = colorStr.match(/\d+(\.\d+)?/g);
+          if (nums && nums.length >= 3) {
+            r = parseFloat(nums[0]);
+            g = parseFloat(nums[1]);
+            b = parseFloat(nums[2]);
+          }
+        } else if (colorStr.startsWith('#')) {
+          let hex = colorStr.slice(1);
+          if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+          if (hex.length === 6) {
+            r = parseInt(hex.slice(0, 2), 16);
+            g = parseInt(hex.slice(2, 4), 16);
+            b = parseInt(hex.slice(4, 6), 16);
+          }
+        }
+        return [
+          (Math.max(0, Math.min(255, r)) / 255).toFixed(4),
+          (Math.max(0, Math.min(255, g)) / 255).toFixed(4),
+          (Math.max(0, Math.min(255, b)) / 255).toFixed(4)
+        ];
+      }
+
+      function convertSvgPathToPostScript(dString, height) {
+        const tokens = dString.match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g);
+        if (!tokens || tokens.length === 0) return '';
+
+        const ps = ['newpath'];
+        let i = 0, cmd = '';
+        let curX = 0, curY = 0, startX = 0, startY = 0;
+        const fx = (x) => x.toFixed(2);
+        const fy = (y) => (height - y).toFixed(2);
+        const nextNum = () => parseFloat(tokens[i++]);
+
+        while (i < tokens.length) {
+          if (/^[a-zA-Z]$/.test(tokens[i])) cmd = tokens[i++];
+
+          switch (cmd) {
+            case 'M': {
+              const x = nextNum(), y = nextNum();
+              curX = x; curY = y; startX = x; startY = y;
+              ps.push(`${fx(x)} ${fy(y)} moveto`);
+              cmd = 'L';
+              break;
+            }
+            case 'm': {
+              const x = curX + nextNum(), y = curY + nextNum();
+              curX = x; curY = y; startX = x; startY = y;
+              ps.push(`${fx(x)} ${fy(y)} moveto`);
+              cmd = 'l';
+              break;
+            }
+            case 'L': {
+              const x = nextNum(), y = nextNum();
+              curX = x; curY = y;
+              ps.push(`${fx(x)} ${fy(y)} lineto`);
+              break;
+            }
+            case 'l': {
+              const x = curX + nextNum(), y = curY + nextNum();
+              curX = x; curY = y;
+              ps.push(`${fx(x)} ${fy(y)} lineto`);
+              break;
+            }
+            case 'H': {
+              curX = nextNum();
+              ps.push(`${fx(curX)} ${fy(curY)} lineto`);
+              break;
+            }
+            case 'h': {
+              curX += nextNum();
+              ps.push(`${fx(curX)} ${fy(curY)} lineto`);
+              break;
+            }
+            case 'V': {
+              curY = nextNum();
+              ps.push(`${fx(curX)} ${fy(curY)} lineto`);
+              break;
+            }
+            case 'v': {
+              curY += nextNum();
+              ps.push(`${fx(curX)} ${fy(curY)} lineto`);
+              break;
+            }
+            case 'Q': {
+              const qx = nextNum(), qy = nextNum(), x = nextNum(), y = nextNum();
+              const c1x = curX + (2 / 3) * (qx - curX);
+              const c1y = curY + (2 / 3) * (qy - curY);
+              const c2x = x + (2 / 3) * (qx - x);
+              const c2y = y + (2 / 3) * (qy - y);
+              ps.push(`${fx(c1x)} ${fy(c1y)} ${fx(c2x)} ${fy(c2y)} ${fx(x)} ${fy(y)} curveto`);
+              curX = x; curY = y;
+              break;
+            }
+            case 'q': {
+              const qx = curX + nextNum(), qy = curY + nextNum();
+              const x = curX + nextNum(), y = curY + nextNum();
+              const c1x = curX + (2 / 3) * (qx - curX);
+              const c1y = curY + (2 / 3) * (qy - curY);
+              const c2x = x + (2 / 3) * (qx - x);
+              const c2y = y + (2 / 3) * (qy - y);
+              ps.push(`${fx(c1x)} ${fy(c1y)} ${fx(c2x)} ${fy(c2y)} ${fx(x)} ${fy(y)} curveto`);
+              curX = x; curY = y;
+              break;
+            }
+            case 'C': {
+              const x1 = nextNum(), y1 = nextNum(), x2 = nextNum(), y2 = nextNum(), x = nextNum(), y = nextNum();
+              ps.push(`${fx(x1)} ${fy(y1)} ${fx(x2)} ${fy(y2)} ${fx(x)} ${fy(y)} curveto`);
+              curX = x; curY = y;
+              break;
+            }
+            case 'c': {
+              const x1 = curX + nextNum(), y1 = curY + nextNum();
+              const x2 = curX + nextNum(), y2 = curY + nextNum();
+              const x = curX + nextNum(), y = curY + nextNum();
+              ps.push(`${fx(x1)} ${fy(y1)} ${fx(x2)} ${fy(y2)} ${fx(x)} ${fy(y)} curveto`);
+              curX = x; curY = y;
+              break;
+            }
+            case 'Z':
+            case 'z': {
+              ps.push('closepath');
+              curX = startX; curY = startY;
+              break;
+            }
+            default: {
+              i++;
+              break;
+            }
+          }
+        }
+        return ps.join('\n');
+      }
+
+      function compilePathsToEPS(pathsData, width, height, origFileName) {
+        const cleanTitle = (origFileName || 'vektor').replace(/\.[^/.]+$/, '') + `_${width}px.eps`;
+        const lines = [
+          '%!PS-Adobe-3.0 EPSF-3.0',
+          '%%Creator: VektorStudio Pro',
+          `%%Title: ${cleanTitle}`,
+          `%%CreationDate: ${new Date().toISOString()}`,
+          `%%BoundingBox: 0 0 ${Math.round(width)} ${Math.round(height)}`,
+          `%%HiResBoundingBox: 0.00 0.00 ${width.toFixed(2)} ${height.toFixed(2)}`,
+          '%%LanguageLevel: 2',
+          '%%Pages: 1',
+          '%%EndComments',
+          '%%BeginProlog',
+          '%%EndProlog',
+          '%%Page: 1 1',
+          'gsave'
+        ];
+
+        for (let i = 0; i < pathsData.length; i++) {
+          const item = pathsData[i];
+          const [r, g, b] = parseCssColorToRgbFloat(item.fill);
+          const psPath = convertSvgPathToPostScript(item.d, height);
+          if (psPath) {
+            lines.push(`${r} ${g} ${b} setrgbcolor`);
+            lines.push(psPath);
+            lines.push('fill');
+          }
+        }
+
+        lines.push('grestore', 'showpage', '%%Trailer', '%%EOF');
+        return lines.join('\n');
+      }
+
+      // =======================================================================
+      // 10. PREVIEW INTERAKTIF (ZOOM, PAN, VIEW MODE, SPLIT SLIDER)
+      // =======================================================================
+      function fitStageToViewport(w, h) {
+        if (!w || !h) return;
+        const vpRect = el.canvasViewport.getBoundingClientRect();
+        const pad = 44;
+        const availW = Math.max(180, vpRect.width - pad);
+        const availH = Math.max(180, vpRect.height - pad);
+        const aspect = w / h;
+
+        let displayW = availW;
+        let displayH = displayW / aspect;
+        if (displayH > availH) {
+          displayH = availH;
+          displayW = displayH * aspect;
+        }
+
+        el.transformLayer.style.width = `${Math.round(displayW)}px`;
+        el.transformLayer.style.height = `${Math.round(displayH)}px`;
+
+        state.zoom = 1;
+        state.panX = 0;
+        state.panY = 0;
+        el.zoomPresetSelect.value = '1';
+        applyTransform();
+      }
+
+      function applyTransform() {
+        el.transformLayer.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+      }
+
+      function setViewMode(mode) {
+        state.viewMode = mode;
+        el.viewTabs.forEach((t) => {
+          t.className = t.dataset.view === mode
+            ? 'view-tab px-2.5 py-1.5 text-xs font-medium rounded bg-zinc-800 text-zinc-100 transition-colors'
+            : 'view-tab px-2.5 py-1.5 text-xs font-medium rounded text-zinc-400 hover:text-zinc-200 transition-colors';
+          if (t.id === 'tabViewWireframe' && state.activeMode !== 'vector') {
+            t.classList.add('hidden');
+          }
+        });
+        applyViewMode();
+      }
+
+      function applyViewMode() {
+        el.resultLayer.classList.remove('wireframe-mode', 'wireframe-light');
+
+        if (state.viewMode === 'split') {
+          el.originalLayer.style.opacity = '1';
+          el.resultLayer.style.opacity = '1';
+          el.splitHandle.classList.remove('hidden');
+          updateSplitClip();
+        } else if (state.viewMode === 'result') {
+          el.originalLayer.style.opacity = '0';
+          el.resultLayer.style.opacity = '1';
+          el.resultLayer.style.clipPath = 'none';
+          el.splitHandle.classList.add('hidden');
+        } else if (state.viewMode === 'original') {
+          el.originalLayer.style.opacity = '1';
+          el.resultLayer.style.opacity = '0';
+          el.resultLayer.style.clipPath = 'none';
+          el.splitHandle.classList.add('hidden');
+        } else if (state.viewMode === 'wireframe' && state.activeMode === 'vector') {
+          el.originalLayer.style.opacity = '0';
+          el.resultLayer.style.opacity = '1';
+          el.resultLayer.style.clipPath = 'none';
+          el.splitHandle.classList.add('hidden');
+          el.resultLayer.classList.add(state.canvasBg === 'light' ? 'wireframe-light' : 'wireframe-mode');
+        }
+      }
+
+      function updateSplitClip() {
+        const pct = Math.max(0, Math.min(100, state.splitPos));
+        el.splitHandle.style.left = `${pct}%`;
+        el.resultLayer.style.clipPath = `inset(0 0 0 ${pct}%)`;
+      }
+
+      // =======================================================================
+      // 11. EXPORT & MODAL EPS
+      // =======================================================================
+      function triggerDownloadBlobUrl(url, fileName) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      function triggerDownloadText(content, mime, fileName) {
+        const blob = new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        triggerDownloadBlobUrl(url, fileName);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function openEpsModal() {
+        if (!state.vec.epsString) return;
+        const lines = state.vec.epsString.split('\n');
+        const total = lines.length;
+        const snippet = total <= 120
+          ? state.vec.epsString
+          : `${lines.slice(0, 75).join('\n')}\n\n% ... [ ${(total - 100).toLocaleString('id-ID')} baris perintah vektor PostScript lainnya disembunyikan ] ...\n\n${lines.slice(-25).join('\n')}`;
+
+        el.epsModalMeta.textContent = `Total ${total.toLocaleString('id-ID')} baris · ${formatBytes(state.vec.epsByteSize)} · BoundingBox: 0 0 ${state.vec.targetW} ${state.vec.targetH}`;
+        el.epsCodePreview.textContent = snippet;
+        el.epsModal.classList.remove('hidden');
+      }
+
+      function copyEpsSnippet() {
+        const ta = document.createElement('textarea');
+        ta.value = el.epsCodePreview.textContent;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showToast('Potongan kode EPS berhasil disalin.', 'success');
+        } catch (e) {
+          showToast('Gagal menyalin kode EPS.', 'error');
+        }
+        document.body.removeChild(ta);
+      }
+
+      // =======================================================================
+      // 12. EVENT LISTENERS
+      // =======================================================================
+
+      // Tab Navigasi 3 Mode
+      el.tabResize.addEventListener('click', () => switchMode('resize'));
+      el.tabUpscaler.addEventListener('click', () => switchMode('upscaler'));
+      el.tabVector.addEventListener('click', () => switchMode('vector'));
+
+      // Upload Triggers
+      el.dropzone.addEventListener('click', () => el.fileInput.click());
+      el.dropzone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.fileInput.click(); }
+      });
+      el.btnHeaderUpload.addEventListener('click', () => el.fileInput.click());
+      el.btnEmptyUpload.addEventListener('click', () => el.fileInput.click());
+
+      el.fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleFileUpload(e.target.files[0]);
+          e.target.value = '';
+        }
+      });
+
+      // Drag & Drop
+      ['dragenter', 'dragover'].forEach((evt) => {
+        el.dropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          el.dropzone.classList.add('border-zinc-200', 'bg-zinc-800/70');
+        });
+      });
+      ['dragleave', 'drop'].forEach((evt) => {
+        el.dropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          el.dropzone.classList.remove('border-zinc-200', 'bg-zinc-800/70');
+        });
+      });
+      el.dropzone.addEventListener('drop', (e) => {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleFileUpload(e.dataTransfer.files[0]);
+        }
+      });
+
+      // Tombol Gambar Contoh
+      const triggerSampleForActiveMode = () => {
+        if (state.activeMode === 'resize') generateHighResSampleImage();
+        else if (state.activeMode === 'upscaler') generateBlurrySampleImage();
+        else generateVectorSampleImage();
+      };
+      el.btnHeaderSample.addEventListener('click', triggerSampleForActiveMode);
+      el.btnEmptySample.addEventListener('click', triggerSampleForActiveMode);
+
+      // --- EVENT LISTENERS MODE 1: RESIZE & ASPEK RASIO ---
+      el.inputResizeW.addEventListener('input', (e) => {
+        const rs = state.rs;
+        const val = parseInt(e.target.value, 10);
+        if (!val || val < 1) return;
+        rs.targetW = Math.min(8192, val);
+        if (rs.lockRatio) {
+          const ratio = getActiveResizeRatioValue();
+          rs.targetH = Math.max(1, Math.round(rs.targetW / ratio));
+          el.inputResizeH.value = rs.targetH;
+        }
+        if (rs.origW) {
+          rs.scalePct = Math.max(10, Math.min(100, Math.round((rs.targetW / rs.origW) * 100)));
+          el.sliderResizeScale.value = rs.scalePct;
+          el.valResizeScale.textContent = `${rs.scalePct}%`;
+        }
+        scheduleResizeRender(60);
+      });
+
+      el.inputResizeH.addEventListener('input', (e) => {
+        const rs = state.rs;
+        const val = parseInt(e.target.value, 10);
+        if (!val || val < 1) return;
+        rs.targetH = Math.min(8192, val);
+        if (rs.lockRatio) {
+          const ratio = getActiveResizeRatioValue();
+          rs.targetW = Math.max(1, Math.round(rs.targetH * ratio));
+          el.inputResizeW.value = rs.targetW;
+        }
+        if (rs.origH) {
+          rs.scalePct = Math.max(10, Math.min(100, Math.round((rs.targetH / rs.origH) * 100)));
+          el.sliderResizeScale.value = rs.scalePct;
+          el.valResizeScale.textContent = `${rs.scalePct}%`;
+        }
+        scheduleResizeRender(60);
+      });
+
+      el.btnLockRatio.addEventListener('click', () => {
+        state.rs.lockRatio = !state.rs.lockRatio;
+        syncResizeInputsUI();
+        showToast(state.rs.lockRatio ? 'Kunci proporsi rasio diaktifkan.' : 'Kunci rasio dibuka (ukuran bebas).');
+      });
+
+      el.sliderResizeScale.addEventListener('input', (e) => {
+        state.rs.scalePct = parseInt(e.target.value, 10);
+        recalcResizeDimensionsFromScale();
+        syncResizeInputsUI();
+        scheduleResizeRender(30);
+      });
+
+      el.rsPresetBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const rs = state.rs;
+          const [type, raw] = btn.dataset.rsPreset.split(':');
+          const num = parseInt(raw, 10);
+
+          if (type === 'pct') {
+            rs.scalePct = num;
+            recalcResizeDimensionsFromScale();
+          } else if (type === 'px') {
+            const ratio = getActiveResizeRatioValue();
+            if (ratio >= 1) {
+              rs.targetW = num;
+              rs.targetH = Math.max(16, Math.round(num / ratio));
+            } else {
+              rs.targetH = num;
+              rs.targetW = Math.max(16, Math.round(num * ratio));
+            }
+            if (rs.origW && rs.origH) {
+              rs.scalePct = Math.max(10, Math.min(100, Math.round((Math.max(rs.targetW, rs.targetH) / Math.max(rs.origW, rs.origH)) * 100)));
+            }
+          }
+          syncResizeInputsUI();
+          if (rs.sourceImage) renderResizeCanvas();
+        });
+      });
+
+      el.ratioBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const rs = state.rs;
+          rs.aspectRatio = btn.dataset.ratio;
+          rs.lockRatio = true;
+
+          el.ratioBtns.forEach((b) => {
+            b.className = b === btn
+              ? 'ratio-btn py-2 px-2 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 text-left transition-colors'
+              : 'ratio-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-500 text-left transition-colors';
+          });
+
+          recalcResizeDimensionsFromScale();
+          syncResizeInputsUI();
+          if (rs.sourceImage) renderResizeCanvas();
+        });
+      });
+
+      el.fitModeBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const rs = state.rs;
+          rs.fitMode = btn.dataset.fit;
+
+          el.fitModeBtns.forEach((b) => {
+            b.className = b === btn
+              ? 'fit-mode-btn py-1.5 px-2 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 text-[11px] font-semibold transition-colors'
+              : 'fit-mode-btn py-1.5 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-500 text-[11px] font-medium transition-colors';
+          });
+
+          syncResizeInputsUI();
+          if (rs.sourceImage) renderResizeCanvas();
+        });
+      });
+
+      el.sliderFocusX.addEventListener('input', (e) => {
+        state.rs.focusX = parseInt(e.target.value, 10);
+        el.valFocusX.textContent = `${state.rs.focusX}%`;
+        scheduleResizeRender(25);
+      });
+
+      el.sliderFocusY.addEventListener('input', (e) => {
+        state.rs.focusY = parseInt(e.target.value, 10);
+        el.valFocusY.textContent = `${state.rs.focusY}%`;
+        scheduleResizeRender(25);
+      });
+
+      el.btnCenterFocus.addEventListener('click', () => {
+        state.rs.focusX = 50;
+        state.rs.focusY = 50;
+        el.sliderFocusX.value = 50;
+        el.sliderFocusY.value = 50;
+        el.valFocusX.textContent = '50%';
+        el.valFocusY.textContent = '50%';
+        if (state.rs.sourceImage) renderResizeCanvas();
+      });
+
+      el.containBgBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.rs.containBg = btn.dataset.cbg;
+          el.containBgBtns.forEach((b) => {
+            b.className = b === btn
+              ? 'contain-bg-btn py-1.5 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 text-[10px] font-semibold transition-colors'
+              : 'contain-bg-btn py-1.5 rounded border border-[#27272a] bg-[#09090b] text-zinc-300 hover:border-zinc-500 text-[10px] font-medium transition-colors';
+          });
+          if (state.rs.sourceImage) renderResizeCanvas();
+        });
+      });
+
+      el.rsFmtBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.rs.exportFormat = btn.dataset.rsFmt;
+          el.rsFmtBtns.forEach((b) => {
+            b.className = b === btn
+              ? 'rs-fmt-btn px-2.5 py-1 rounded text-[11px] font-mono font-medium bg-zinc-800 text-zinc-100 transition-colors'
+              : 'rs-fmt-btn px-2.5 py-1 rounded text-[11px] font-mono font-medium text-zinc-400 hover:text-zinc-200 transition-colors';
+          });
+          syncResizeInputsUI();
+          if (state.rs.sourceImage) renderResizeCanvas();
+        });
+      });
+
+      el.sliderResizeQuality.addEventListener('input', (e) => {
+        state.rs.quality = parseInt(e.target.value, 10);
+        el.valResizeQuality.textContent = `${state.rs.quality}%`;
+        scheduleResizeRender(45);
+      });
+
+      el.btnResetResize.addEventListener('click', () => {
+        const rs = state.rs;
+        rs.scalePct = 100;
+        rs.aspectRatio = 'original';
+        rs.lockRatio = true;
+        rs.fitMode = 'cover';
+        rs.focusX = 50;
+        rs.focusY = 50;
+        rs.containBg = 'transparent';
+        rs.quality = 85;
+
+        el.sliderFocusX.value = 50;
+        el.sliderFocusY.value = 50;
+        el.valFocusX.textContent = '50%';
+        el.valFocusY.textContent = '50%';
+        el.sliderResizeQuality.value = 85;
+
+        document.querySelector('[data-ratio="original"]').click();
+        document.querySelector('[data-fit="cover"]').click();
+        document.querySelector('[data-cbg="transparent"]').click();
+      });
+
+      el.btnDownloadResize.addEventListener('click', () => {
+        const rs = state.rs;
+        if (!rs.resultDataUrl) return;
+        const base = (rs.fileName || 'gambar').replace(/\.[^/.]+$/, '');
+        const ext = rs.exportFormat === 'jpeg' ? 'jpg' : rs.exportFormat;
+        const ratioTag = rs.aspectRatio === 'original' ? '' : `_${rs.aspectRatio.replace(':', 'x')}`;
+        const name = `${base}_${rs.targetW}x${rs.targetH}${ratioTag}.${ext}`;
+        triggerDownloadBlobUrl(rs.resultDataUrl, name);
+        showToast(`Mengunduh ${name}`, 'success');
+      });
+
+      el.btnResizeToUpscaler.addEventListener('click', () => sendResizeResultTo('upscaler'));
+      el.btnResizeToVector.addEventListener('click', () => sendResizeResultTo('vector'));
+
+      // --- EVENT LISTENERS MODE 2: UPSCALER HD ---
+      el.upscaleScaleBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.up.scaleType = btn.dataset.scaleType;
+          state.up.scaleVal = parseInt(btn.dataset.scaleVal, 10);
+
+          el.upscaleScaleBtns.forEach((b) => {
+            const isSelected = b === btn;
+            if (b.dataset.scaleType === 'mult') {
+              b.className = isSelected
+                ? 'upscale-scale-btn py-2 px-2 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 font-mono text-xs font-semibold transition-colors'
+                : 'upscale-scale-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 font-mono text-xs font-medium transition-colors';
+            } else {
+              b.className = isSelected
+                ? 'upscale-scale-btn py-2 px-2.5 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 text-left transition-colors'
+                : 'upscale-scale-btn py-2 px-2.5 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 text-left transition-colors';
+            }
+          });
+
+          if (state.up.sourceImage) {
+            computeUpscaleTargetDim();
+            refreshActiveWorkspaceView();
+            runUpscalePipeline();
+          }
+        });
+      });
+
+      el.upPresetBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.upPreset;
+          const p = UP_PRESETS[key];
+          if (!p) return;
+
+          state.up.preset = key;
+          state.up.sharpen = p.sharpen;
+          state.up.denoise = p.denoise;
+          state.up.contrast = p.contrast;
+
+          el.sliderUpSharpen.value = p.sharpen;
+          el.valUpSharpen.textContent = `${p.sharpen}%`;
+          el.sliderUpDenoise.value = p.denoise;
+          el.valUpDenoise.textContent = `${p.denoise}%`;
+          el.sliderUpContrast.value = p.contrast;
+          el.valUpContrast.textContent = p.contrast > 0 ? `+${p.contrast}` : `${p.contrast}`;
+
+          el.upPresetBtns.forEach((b) => {
+            b.className = b === btn
+              ? 'up-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-zinc-200 bg-zinc-100 text-zinc-950 transition-colors text-left'
+              : 'up-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 transition-colors text-left';
+          });
+
+          if (state.up.sourceImage) runUpscalePipeline();
+        });
+      });
+
+      el.sliderUpSharpen.addEventListener('input', (e) => {
+        state.up.sharpen = parseInt(e.target.value, 10);
+        el.valUpSharpen.textContent = `${state.up.sharpen}%`;
+      });
+      el.sliderUpDenoise.addEventListener('input', (e) => {
+        state.up.denoise = parseInt(e.target.value, 10);
+        el.valUpDenoise.textContent = `${state.up.denoise}%`;
+      });
+      el.sliderUpContrast.addEventListener('input', (e) => {
+        state.up.contrast = parseInt(e.target.value, 10);
+        el.valUpContrast.textContent = state.up.contrast > 0 ? `+${state.up.contrast}` : `${state.up.contrast}`;
+      });
+
+      el.btnResetUpscale.addEventListener('click', () => {
+        document.querySelector('[data-scale-type="mult"][data-scale-val="2"]').click();
+        document.querySelector('[data-up-preset="standar"]').click();
+      });
+      el.btnRunUpscale.addEventListener('click', () => runUpscalePipeline());
+
+      el.fmtBtns.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          state.up.exportFormat = btn.dataset.fmt;
+          el.fmtBtns.forEach((b) => {
+            b.className = b === btn
+              ? 'fmt-btn px-2 py-1 rounded text-[11px] font-mono font-medium bg-zinc-800 text-zinc-100 transition-colors'
+              : 'fmt-btn px-2 py-1 rounded text-[11px] font-mono font-medium text-zinc-400 hover:text-zinc-200 transition-colors';
+          });
+          if (state.up.resultCanvas) {
+            await updateHdExportDataUrl();
+            updateStatusBar();
+          }
+        });
+      });
+
+      el.btnDownloadHd.addEventListener('click', () => {
+        if (!state.up.resultDataUrl) return;
+        const base = (state.up.fileName || 'gambar').replace(/\.[^/.]+$/, '');
+        const ext = state.up.exportFormat === 'jpeg' ? 'jpg' : state.up.exportFormat;
+        const name = `${base}_HD_${state.up.targetW}x${state.up.targetH}.${ext}`;
+        triggerDownloadBlobUrl(state.up.resultDataUrl, name);
+        showToast(`Mengunduh ${name}`, 'success');
+      });
+
+      el.btnSendToVector.addEventListener('click', sendHdResultToVector);
+
+      // --- EVENT LISTENERS MODE 3: VEKTOR EPS 4K ---
+      el.vecScaleBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.vec.targetLongest = parseInt(btn.dataset.vecScale, 10);
+          el.vecScaleBtns.forEach((b) => {
+            b.className = b === btn
+              ? 'vec-scale-btn py-2 px-2 rounded border border-zinc-200 bg-zinc-100 text-zinc-950 text-center transition-colors'
+              : 'vec-scale-btn py-2 px-2 rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 text-center transition-colors';
+          });
+          if (state.vec.sourceImage) {
+            const d = calcDimByLongest(state.vec.origW, state.vec.origH, state.vec.targetLongest);
+            state.vec.targetW = d.w;
+            state.vec.targetH = d.h;
+            refreshActiveWorkspaceView();
+            runVectorizationPipeline();
+          }
+        });
+      });
+
+      el.vecPresetBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.vecPreset;
+          const p = VEC_PRESETS[key];
+          if (!p) return;
+
+          state.vec.preset = key;
+          state.vec.colors = p.colors;
+          state.vec.detail = p.detail;
+          state.vec.smooth = p.smooth;
+          state.vec.sharpen = p.sharpen;
+
+          el.sliderVecColors.value = p.colors;
+          el.valVecColors.textContent = p.colors;
+          el.sliderVecDetail.value = p.detail;
+          el.valVecDetail.textContent = `${p.detail}%`;
+          el.sliderVecSmooth.value = p.smooth;
+          el.valVecSmooth.textContent = `${p.smooth}%`;
+          el.toggleVecSharpen.checked = p.sharpen;
+
+          el.vecPresetBtns.forEach((b) => {
+            b.className = b === btn
+              ? 'vec-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-zinc-200 bg-zinc-100 text-zinc-950 transition-colors text-left'
+              : 'vec-preset-btn px-2.5 py-2 text-xs font-medium rounded border border-[#27272a] bg-[#18181b] text-zinc-300 hover:border-zinc-600 transition-colors text-left';
+          });
+
+          if (state.vec.sourceImage) runVectorizationPipeline();
+        });
+      });
+
+      el.sliderVecColors.addEventListener('input', (e) => {
+        state.vec.colors = parseInt(e.target.value, 10);
+        el.valVecColors.textContent = state.vec.colors;
+      });
+      el.sliderVecDetail.addEventListener('input', (e) => {
+        state.vec.detail = parseInt(e.target.value, 10);
+        el.valVecDetail.textContent = `${state.vec.detail}%`;
+      });
+      el.sliderVecSmooth.addEventListener('input', (e) => {
+        state.vec.smooth = parseInt(e.target.value, 10);
+        el.valVecSmooth.textContent = `${state.vec.smooth}%`;
+      });
+      el.toggleVecSharpen.addEventListener('change', (e) => {
+        state.vec.sharpen = e.target.checked;
+      });
+
+      el.btnResetVector.addEventListener('click', () => {
+        document.querySelector('[data-vec-scale="3840"]').click();
+        document.querySelector('[data-vec-preset="ilustrasi"]').click();
+      });
+      el.btnRunVector.addEventListener('click', () => runVectorizationPipeline());
+
+      el.btnDownloadEps.addEventListener('click', () => {
+        if (!state.vec.epsString) return;
+        const base = (state.vec.fileName || 'gambar').replace(/\.[^/.]+$/, '');
+        const tag = state.vec.targetLongest === 3840 ? '4K_UHD' : state.vec.targetLongest === 2560 ? '2K_QHD' : 'FullHD';
+        const name = `${base}_${tag}.eps`;
+        triggerDownloadText(state.vec.epsString, 'application/postscript', name);
+        showToast(`Mengunduh ${name}`, 'success');
+      });
+
+      el.btnDownloadSvg.addEventListener('click', () => {
+        if (!state.vec.svgString) return;
+        const base = (state.vec.fileName || 'gambar').replace(/\.[^/.]+$/, '');
+        const tag = state.vec.targetLongest === 3840 ? '4K_UHD' : state.vec.targetLongest === 2560 ? '2K_QHD' : 'FullHD';
+        const name = `${base}_${tag}.svg`;
+        triggerDownloadText(state.vec.svgString, 'image/svg+xml;charset=utf-8', name);
+        showToast(`Mengunduh ${name}`, 'success');
+      });
+
+      el.btnInspectEpsSide.addEventListener('click', openEpsModal);
+      el.btnHeaderInspectEps.addEventListener('click', openEpsModal);
+      el.btnCopyEps.addEventListener('click', copyEpsSnippet);
+      el.btnCloseModal.addEventListener('click', () => el.epsModal.classList.add('hidden'));
+      el.epsModal.addEventListener('click', (e) => {
+        if (e.target === el.epsModal) el.epsModal.classList.add('hidden');
+      });
+
+      // --- TOOLBAR PREVIEW: VIEW MODE, LATAR, ZOOM, PAN, SPLIT ---
+      el.viewTabs.forEach((tab) => {
+        tab.addEventListener('click', () => setViewMode(tab.dataset.view));
+      });
+
+      el.bgBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.canvasBg = btn.dataset.bg;
+          el.bgBtns.forEach((b) => {
+            b.className = b === btn
+              ? 'bg-btn px-2 py-1 text-[11px] font-medium rounded bg-zinc-800 text-zinc-100 transition-colors'
+              : 'bg-btn px-2 py-1 text-[11px] font-medium rounded text-zinc-400 hover:text-zinc-200 transition-colors';
+          });
+          el.canvasViewport.classList.remove('bg-checkerboard', 'bg-[#09090b]', 'bg-zinc-100');
+          if (state.canvasBg === 'checker') el.canvasViewport.classList.add('bg-checkerboard');
+          if (state.canvasBg === 'dark') el.canvasViewport.classList.add('bg-[#09090b]');
+          if (state.canvasBg === 'light') el.canvasViewport.classList.add('bg-zinc-100');
+          if (state.viewMode === 'wireframe') applyViewMode();
+        });
+      });
+
+      const fitActive = () => {
+        const active = getActiveStateObj();
+        if (!active.sourceImage) return;
+        if (state.activeMode === 'resize') {
+          fitStageToViewport(active.targetW || active.origW, active.targetH || active.origH);
+        } else {
+          fitStageToViewport(active.origW, active.origH);
+        }
+      };
+
+      el.zoomPresetSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'fit') {
+          fitActive();
+        } else {
+          state.zoom = parseFloat(val);
+          applyTransform();
+        }
+      });
+
+      el.btnZoomIn.addEventListener('click', () => {
+        state.zoom = Math.min(6, Number((state.zoom * 1.25).toFixed(2)));
+        applyTransform();
+      });
+
+      el.btnZoomOut.addEventListener('click', () => {
+        state.zoom = Math.max(0.25, Number((state.zoom / 1.25).toFixed(2)));
+        applyTransform();
+      });
+
+      el.btnZoomFit.addEventListener('click', fitActive);
+
+      el.canvasViewport.addEventListener('wheel', (e) => {
+        const active = getActiveStateObj();
+        if (!active.sourceImage) return;
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.12 : 0.89;
+        state.zoom = Math.max(0.25, Math.min(6, Number((state.zoom * factor).toFixed(3))));
+        applyTransform();
+      }, { passive: false });
+
+      // Split Slider & Pan (Mouse + Touch)
+      let isDraggingSplit = false;
+      let isPanning = false;
+      let panStartX = 0, panStartY = 0;
+
+      function updateSplitFromClientX(clientX) {
+        const rect = el.transformLayer.getBoundingClientRect();
+        if (rect.width <= 0) return;
+        state.splitPos = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+        updateSplitClip();
+      }
+
+      el.splitHandle.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        isDraggingSplit = true;
+        document.body.classList.add('no-select');
+      });
+      el.splitHandle.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+        isDraggingSplit = true;
+      }, { passive: true });
+
+      el.previewStage.addEventListener('mousedown', (e) => {
+        if (isDraggingSplit || e.button !== 0) return;
+        isPanning = true;
+        panStartX = e.clientX - state.panX;
+        panStartY = e.clientY - state.panY;
+        document.body.classList.add('no-select');
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (isDraggingSplit) {
+          updateSplitFromClientX(e.clientX);
+        } else if (isPanning) {
+          state.panX = e.clientX - panStartX;
+          state.panY = e.clientY - panStartY;
+          applyTransform();
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDraggingSplit = false;
+        isPanning = false;
+        document.body.classList.remove('no-select');
+      });
+
+      window.addEventListener('touchmove', (e) => {
+        if (isDraggingSplit && e.touches[0]) {
+          updateSplitFromClientX(e.touches[0].clientX);
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        isDraggingSplit = false;
+      });
+
+      window.addEventListener('resize', fitActive);
+
+      // Inisialisasi awal pada Tab 1 (Default): Resize & Aspek Rasio
+      syncResizeInputsUI();
+      switchMode('resize');
+    })();
+  </script>
+</body>
+</html>
